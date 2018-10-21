@@ -3,9 +3,8 @@ package scheduler
 import (
 	"time"
 
-	"github.com/go-telegram-bot-api/telegram-bot-api"
-
 	"github.com/go-pg/pg"
+	"github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/jqs7/zwei/model"
 )
 

@@ -55,6 +55,7 @@ func (h Handler) sendCaptcha(bot *tgbotapi.BotAPI,
 	userLink := fmt.Sprintf(UserLinkTemplate, user.FirstName+" "+user.LastName, user.ID)
 	photo.Caption = fmt.Sprintf(EnterRoomMsg, userLink, chat.Title)
 	photo.ParseMode = tgbotapi.ModeMarkdown
+	photo.ReplyMarkup = inlineKeyboard
 	photoMsg, err := bot.Send(photo)
 	if err != nil {
 		return err
@@ -67,12 +68,7 @@ func (h Handler) sendCaptcha(bot *tgbotapi.BotAPI,
 		WherePK().Update(); err != nil {
 		return err
 	}
-	_, err = bot.Send(tgbotapi.NewEditMessageReplyMarkup(
-		chat.ID,
-		photoMsg.MessageID,
-		inlineKeyboard,
-	))
-	return err
+	return nil
 }
 
 func (h Handler) OnGroupMsg(bot *tgbotapi.BotAPI, msg tgbotapi.Message) error {
