@@ -1,0 +1,10 @@
+@startuml
+start
+:invite to group;
+:setting captcha config;
+:enable for group;
+:new member msg;
+:add member to disable list;
+:send captcha;
+end
+@enduml
