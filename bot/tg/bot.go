@@ -44,6 +44,9 @@ func (b Bot) onNewChatMembers(msg tgbotapi.Message) error {
 		if v.ID == b.myInfo.ID {
 			return b.BotEnterGroup(b.BotAPI, msg.Chat)
 		}
+		if v.IsBot {
+			continue
+		}
 		if err := b.NewMemberInGroup(b.BotAPI, msg.Chat, v); err != nil {
 			return err
 		}
