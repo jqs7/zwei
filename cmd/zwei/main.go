@@ -2,22 +2,18 @@ package main
 
 import (
 	"log"
-	
-	"github.com/jqs7/zwei/env"
+
 	"github.com/hanguofeng/gocaptcha"
 	"github.com/jqs7/zwei/biz"
 	"github.com/jqs7/zwei/bot/tg"
 	"github.com/jqs7/zwei/db"
+	"github.com/jqs7/zwei/env"
 	"github.com/jqs7/zwei/model"
 	"github.com/jqs7/zwei/scheduler"
 )
 
 func main() {
-
-	err := env.Init()
-	if err != nil {
-		log.Fatalln(err.Error())
-	}
+	env.Init()
 
 	filterConfig := new(gocaptcha.FilterConfig)
 	filterConfig.Init()
@@ -26,6 +22,7 @@ func main() {
 		gocaptcha.IMAGE_FILTER_NOISE_POINT,
 		gocaptcha.IMAGE_FILTER_STRIKE,
 	}
+
 	for _, v := range filterConfig.Filters {
 		filterConfigGroup := new(gocaptcha.FilterConfigGroup)
 		filterConfigGroup.Init()
@@ -35,6 +32,11 @@ func main() {
 	idiomCount, err := db.Instance().Model(new(model.Idiom)).Count()
 	if err != nil {
 		log.Fatalln(err)
+	}
+
+	var botOpts []tg.ConfigFunc
+	if env.Spec.Debug {
+		botOpts = append(botOpts, tg.Debug())
 	}
 	bot := tg.NewBot(
 		env.Spec.Token,
@@ -52,8 +54,9 @@ func main() {
 			IdiomCount:         idiomCount,
 			ImageFilterManager: gocaptcha.CreateImageFilterManagerByConfig(filterConfig),
 		},
-		tg.Debug(),
+		botOpts...,
 	)
+
 	go func() {
 		err := scheduler.New(db.Instance(), bot.BotAPI).Run()
 		log.Panic(err)
