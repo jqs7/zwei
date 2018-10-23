@@ -10,6 +10,7 @@ type Specification struct {
 	Address  string `default:"127.0.0.1"`
 	Port     string `default:"5432"`
 	User     string `default:"jqs7"`
+	Password string
 	Database string `default:"zwei"`
 }
 

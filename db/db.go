@@ -20,6 +20,7 @@ func Instance() *pg.DB {
 		pgDB = pg.Connect(&pg.Options{
 			Addr:     fmt.Sprintf("%s:%s", env.Spec.Address, env.Spec.Port),
 			User:     env.Spec.User,
+			Password: env.Spec.Password,
 			Database: env.Spec.Database,
 			OnConnect: func(db *pg.DB) error {
 				log.Println("database is connected")
