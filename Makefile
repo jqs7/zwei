@@ -21,7 +21,7 @@ build: ## build
 
 .PHONY: migration
 migration: ## migration
-	cd cmd/migrate && ./migrate
+	cd cmd/migrate && ./migrate up
 
 .PHONY: clean
 clean: ## clean 
