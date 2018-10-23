@@ -4,15 +4,19 @@ APP_NAME=zwei
 APP_BINARY=bin/$(APP_NAME)
 APP_BINARY_UNIX=bin/$(APP_NAME)_unix_amd64
 
-all: postgres build migration
+all: postgres build migration zwei
 
 .PHONY: test
 test: ## test
 	go test -v ./...
 
+.PHONY: zwei
+zwei: ## run zwei in docker 
+	docker-compose up -d zwei
+
 .PHONY: postgres
 postgres: ## run postgres in docker 
-	docker-compose up -d
+	docker-compose up -d postgres
 
 .PHONY: build
 build: ## build
@@ -35,7 +39,7 @@ run: build ## run
 
 .PHONY: build-linux
 build-linux: ## build linux
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o $(APP_BINARY_UNIX) -v
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o $(APP_BINARY_UNIX) cmd/zwei/main.go
 
 
 .PHONY: help

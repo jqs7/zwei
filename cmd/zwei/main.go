@@ -2,7 +2,8 @@ package main
 
 import (
 	"log"
-
+	
+	"github.com/jqs7/zwei/env"
 	"github.com/hanguofeng/gocaptcha"
 	"github.com/jqs7/zwei/biz"
 	"github.com/jqs7/zwei/bot/tg"
@@ -12,6 +13,12 @@ import (
 )
 
 func main() {
+
+	err := env.Init()
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+
 	filterConfig := new(gocaptcha.FilterConfig)
 	filterConfig.Init()
 	filterConfig.Filters = []string{
@@ -30,7 +37,7 @@ func main() {
 		log.Fatalln(err)
 	}
 	bot := tg.NewBot(
-		"",
+		env.Spec.Token,
 		biz.Handler{
 			ImageConfig: &gocaptcha.ImageConfig{
 				Width:    320,

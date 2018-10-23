@@ -1,6 +1,16 @@
-version: '3'
+version: "3"
 
 services:
+  
+  zwei:
+    build: .
+    environment:
+      - ZWEI_ADDRESS=postgres
+      - ZWEI_USER=jqs7
+      - ZWEI_DATABASE=zwei
+      # test bot token
+      - ZWEI_TOKEN=718186143:AAEUuRFxNUBETqw9mdcVr-5QRzCXBLyn9Bg 
+
   postgres:
     image: postgres
     environment:
