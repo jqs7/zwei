@@ -4,15 +4,19 @@ APP_NAME=zwei
 APP_BINARY=bin/$(APP_NAME)
 APP_BINARY_UNIX=bin/$(APP_NAME)_unix_amd64
 
-all: postgres build migration
+all: postgres build migration zwei
 
 .PHONY: test
 test: ## test
 	go test -v ./...
 
+.PHONY: zwei
+zwei: ## run zwei in docker 
+	docker-compose up -d zwei
+
 .PHONY: postgres
 postgres: ## run postgres in docker 
-	docker-compose up -d
+	docker-compose up -d postgres
 
 .PHONY: build
 build: ## build
