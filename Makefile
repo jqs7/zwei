@@ -35,7 +35,7 @@ run: build ## run
 
 .PHONY: build-linux
 build-linux: ## build linux
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o $(APP_BINARY_UNIX) -v
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o $(APP_BINARY_UNIX) cmd/zwei/main.go
 
 
 .PHONY: help

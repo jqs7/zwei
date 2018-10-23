@@ -1,11 +1,13 @@
 package db
 
 import (
+	"fmt"
 	"log"
 	"sync"
 	"time"
 
 	"github.com/go-pg/pg"
+	"github.com/jqs7/zwei/env"
 )
 
 var (
@@ -16,8 +18,9 @@ var (
 func Instance() *pg.DB {
 	once.Do(func() {
 		pgDB = pg.Connect(&pg.Options{
-			User:     "jqs7",
-			Database: "zwei",
+			Addr:     fmt.Sprintf("%s:%s", env.Spec.Address, env.Spec.Port),
+			User:     env.Spec.User,
+			Database: env.Spec.Database,
 			OnConnect: func(db *pg.DB) error {
 				log.Println("database is connected")
 				return nil
