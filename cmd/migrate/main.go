@@ -7,10 +7,12 @@ import (
 
 	"github.com/go-pg/migrations"
 	"github.com/jqs7/zwei/db"
+	"github.com/jqs7/zwei/env"
 )
 
 func main() {
 	flag.Parse()
+	env.Init()
 	oldVer, newVer, err := migrations.Run(db.Instance(), flag.Args()...)
 	if err != nil {
 		log.Fatalln(err)
