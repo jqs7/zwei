@@ -2,12 +2,13 @@ package main
 
 import (
 	"log"
-	
-	"github.com/jqs7/zwei/env"
+	"os"
+
 	"github.com/hanguofeng/gocaptcha"
 	"github.com/jqs7/zwei/biz"
 	"github.com/jqs7/zwei/bot/tg"
 	"github.com/jqs7/zwei/db"
+	"github.com/jqs7/zwei/env"
 	"github.com/jqs7/zwei/model"
 	"github.com/jqs7/zwei/scheduler"
 )
@@ -36,6 +37,9 @@ func main() {
 	if err != nil {
 		log.Fatalln(err)
 	}
+
+	pwd, _ := os.Getwd()
+	fontPath := pwd + "/fonts/"
 	bot := tg.NewBot(
 		env.Spec.Token,
 		biz.Handler{
@@ -44,9 +48,9 @@ func main() {
 				Height:   100,
 				FontSize: 80,
 				FontFiles: []string{
-					"fonts/STFANGSO.ttf",
-					"fonts/STHEITI.ttf",
-					"fonts/STXIHEI.ttf",
+					fontPath + "STFANGSO.ttf",
+					fontPath + "STHEITI.ttf",
+					fontPath + "STXIHEI.ttf",
 				},
 			},
 			IdiomCount:         idiomCount,
