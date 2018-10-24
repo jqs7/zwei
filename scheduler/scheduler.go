@@ -1,10 +1,13 @@
 package scheduler
 
 import (
+	"errors"
+	"fmt"
 	"time"
 
 	"github.com/go-pg/pg"
 	"github.com/go-telegram-bot-api/telegram-bot-api"
+	"github.com/jqs7/zwei/biz/values"
 	"github.com/jqs7/zwei/model"
 )
 
@@ -31,7 +34,7 @@ func (s Scheduler) Run() error {
 		var tasks []model.Task
 		err := s.Model(&model.Task{}).
 			Where("status = ?", model.TaskStatusPlan).
-			Where("run_at < ?", time.Now()).
+			Where("run_at <= ?", time.Now()).
 			Limit(10).
 			Select(&tasks)
 		if err != nil {
@@ -54,10 +57,67 @@ func (s Scheduler) processTask(task model.Task) error {
 	switch task.Type {
 	case model.TaskTypeDeleteMsg:
 		s.DeleteMessage(tgbotapi.NewDeleteMessage(task.ChatID, task.MsgID))
+		_, err = s.Model(&task).WherePK().
+			Set("status = ?", model.TaskStatusDone).
+			Update()
+		return err
+	case model.TaskTypeUpdateMsgExpire:
+		if err := s.updateMsgExpire(task); err != nil {
+			_, err = s.Model(&task).WherePK().
+				Set("run_at = ?", time.Now().Add(time.Second*3)).
+				Set("status = ?", model.TaskStatusPlan).
+				Update()
+			return err
+		}
+		_, err = s.Model(&task).WherePK().
+			Set("status = ?", model.TaskStatusDone).
+			Update()
+		return err
 	}
-	_, err = s.Model(&task).WherePK().
-		Set("status = ?", model.TaskStatusDone).
-		Update()
+	return nil
+}
+
+func (s Scheduler) updateMsgExpire(task model.Task) error {
+	blackList := &model.BlackList{Id: task.BlackListId}
+	s.Model(blackList).
+		WherePK().First()
+	timeSub := blackList.ExpireAt.Sub(time.Now()) / time.Second
+	if timeSub <= 0 {
+		err := s.delAndKick(blackList)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+	s.updateMsg(blackList, timeSub)
+	return errors.New("not expired")
+}
+
+func (s Scheduler) delAndKick(blackList *model.BlackList) error {
+	if _, err := s.Send(tgbotapi.NewDeleteMessage(
+		blackList.GroupId, blackList.CaptchaMsgId,
+	)); err != nil {
+		return err
+	}
+	_, err := s.KickChatMember(tgbotapi.KickChatMemberConfig{
+		ChatMemberConfig: tgbotapi.ChatMemberConfig{
+			ChatID: blackList.GroupId,
+			UserID: blackList.UserId,
+		},
+	})
+	return err
+}
+
+func (s Scheduler) updateMsg(blackList *model.BlackList, timeSub time.Duration) error {
+	chat, err := s.GetChat(tgbotapi.ChatConfig{ChatID: blackList.GroupId})
+	if err != nil {
+		return err
+	}
+	caption := fmt.Sprintf(values.EnterRoomMsg, blackList.UserLink, chat.Title, timeSub)
+	editor := tgbotapi.NewEditMessageCaption(blackList.GroupId, blackList.CaptchaMsgId, caption)
+	editor.ReplyMarkup = &values.InlineKeyboard
+	editor.ParseMode = tgbotapi.ModeMarkdown
+	_, err = s.Send(editor)
 	return err
 }
 
@@ -69,4 +129,24 @@ func AddDelMsgTask(db *pg.DB, chatID int64, msgID int) error {
 		ChatID: chatID,
 		MsgID:  msgID,
 	})
+}
+
+func AddUpdateMsgExpireTask(db *pg.DB, blackListID, chatID int64, msgID int) error {
+	return db.Insert(&model.Task{
+		Type:        model.TaskTypeUpdateMsgExpire,
+		Status:      model.TaskStatusPlan,
+		RunAt:       time.Now().Add(time.Second * 3),
+		ChatID:      chatID,
+		MsgID:       msgID,
+		BlackListId: blackListID,
+	})
+}
+
+func UpdateMsgExpireTaskDone(db *pg.DB, blackListID int64) error {
+	_, err := db.Model(&model.Task{}).
+		Where("type = ?", model.TaskTypeUpdateMsgExpire).
+		Where("black_list_id = ?", blackListID).
+		Set("status = ?", model.TaskStatusDone).
+		Update()
+	return err
 }

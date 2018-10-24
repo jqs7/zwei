@@ -12,6 +12,7 @@ type BlackList struct {
 	Idiom        Idiom
 	CaptchaMsgId int
 	UserLink     string
+	ExpireAt     time.Time
 	DeletedAt    *time.Time `pg:",soft_delete"`
 }
 
@@ -27,7 +28,8 @@ type Idiom struct {
 }
 
 const (
-	TaskTypeDeleteMsg = "DeleteMsg"
+	TaskTypeDeleteMsg       = "DeleteMsg"
+	TaskTypeUpdateMsgExpire = "UpdateMsgExpire"
 )
 
 const (
@@ -37,10 +39,11 @@ const (
 )
 
 type Task struct {
-	Id     int64
-	Type   string
-	Status int64 `sql:",notnull"`
-	RunAt  time.Time
-	ChatID int64
-	MsgID  int
+	Id          int64
+	Type        string
+	Status      int64 `sql:",notnull"`
+	RunAt       time.Time
+	ChatID      int64
+	MsgID       int
+	BlackListId int64
 }

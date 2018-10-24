@@ -14,6 +14,7 @@ import (
 	"github.com/go-pg/pg"
 	"github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/hanguofeng/gocaptcha"
+	"github.com/jqs7/zwei/biz/values"
 	"github.com/jqs7/zwei/bot/extra"
 	"github.com/jqs7/zwei/db"
 	"github.com/jqs7/zwei/model"
@@ -96,19 +97,26 @@ func (h Handler) sendCaptcha(bot *tgbotapi.BotAPI,
 		Name:  strconv.Itoa(user.ID),
 		Bytes: idiom.CaptchaImg,
 	})
-	userLink := fmt.Sprintf(UserLinkTemplate, user.FirstName+" "+user.LastName, user.ID)
-	photo.Caption = fmt.Sprintf(EnterRoomMsg, userLink, chat.Title)
+	var expireAfter time.Duration = 300
+	userLink := fmt.Sprintf(values.UserLinkTemplate, user.FirstName+" "+user.LastName, user.ID)
+	photo.Caption = fmt.Sprintf(values.EnterRoomMsg, userLink, chat.Title, expireAfter)
 	photo.ParseMode = tgbotapi.ModeMarkdown
-	photo.ReplyMarkup = inlineKeyboard
+	photo.ReplyMarkup = values.InlineKeyboard
 	photoMsg, err := bot.Send(photo)
 	if err != nil {
+		return err
+	}
+	if err := scheduler.AddUpdateMsgExpireTask(
+		db.Instance(), blackList.Id, chat.ID, photoMsg.MessageID,
+	); err != nil {
 		return err
 	}
 	blackList.IdiomId = idiom.Id
 	blackList.CaptchaMsgId = photoMsg.MessageID
 	blackList.UserLink = userLink
+	blackList.ExpireAt = time.Now().Add(time.Second * expireAfter)
 	if _, err := db.Instance().Model(blackList).
-		Column("idiom_id", "captcha_msg_id", "user_link").
+		Column("idiom_id", "captcha_msg_id", "user_link", "expire_at").
 		WherePK().Update(); err != nil {
 		return err
 	}
@@ -143,6 +151,7 @@ func (h Handler) deleteMsg(bot *tgbotapi.BotAPI, chatID int64, messageID int) er
 func (h Handler) OnCallbackQuery(bot *tgbotapi.BotAPI, query tgbotapi.CallbackQuery) error {
 	blackList := &model.BlackList{}
 	err := db.Instance().Model(blackList).
+		Where("group_id = ?", query.Message.Chat.ID).
 		Where("captcha_msg_id = ?", query.Message.MessageID).
 		First()
 	if err != nil {
@@ -150,9 +159,9 @@ func (h Handler) OnCallbackQuery(bot *tgbotapi.BotAPI, query tgbotapi.CallbackQu
 		return err
 	}
 	switch query.Data {
-	case CallbackTypeRefresh:
+	case values.CallbackTypeRefresh:
 		return h.refresh(bot, blackList, query)
-	case CallbackTypePassThrough:
+	case values.CallbackTypePassThrough:
 		return h.passThrough(bot, blackList, query)
 	}
 	return nil
@@ -176,8 +185,9 @@ func (h Handler) refresh(bot *tgbotapi.BotAPI, blackList *model.BlackList, query
 	}
 	if err := extra.UpdateMsgPhoto(
 		bot, query.Message.Chat.ID, query.Message.MessageID,
-		fmt.Sprintf(EnterRoomMsg, blackList.UserLink, query.Message.Chat.Title),
-		tgbotapi.ModeMarkdown, inlineKeyboard, tgbotapi.FileBytes{
+		fmt.Sprintf(values.EnterRoomMsg, blackList.UserLink, query.Message.Chat.Title,
+			time.Until(blackList.ExpireAt)/time.Second),
+		tgbotapi.ModeMarkdown, values.InlineKeyboard, tgbotapi.FileBytes{
 			Name:  strconv.Itoa(query.From.ID),
 			Bytes: idiom.CaptchaImg,
 		},
@@ -224,6 +234,7 @@ func (h Handler) validateOK(bot *tgbotapi.BotAPI, blackList *model.BlackList) er
 	if err != nil {
 		return err
 	}
+	scheduler.UpdateMsgExpireTaskDone(db.Instance(), blackList.Id)
 	return scheduler.AddDelMsgTask(db.Instance(), blackList.GroupId, passMsg.MessageID)
 }
 
