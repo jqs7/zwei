@@ -3,9 +3,9 @@ version: "3"
 services:
   zwei:
     build: .
-    image: golang
-    volumes:
-      - ./:/home/app
+    # image: golang
+    # volumes:
+    #   - ./:/home/app
     environment:
       - ZWEI_ADDRESS=postgres
       - ZWEI_USER=jqs7

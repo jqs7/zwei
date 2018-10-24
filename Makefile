@@ -27,7 +27,7 @@ migration: ## migration
 .PHONY: build
 build: ## build
 	go build -o $(APP_BINARY) -v $(APP_CMD_DIR)/main.go
-	go build -o cmd/migrate/bin/migrate -v cmd/migrate/*.go
+	go build -o bin/migrate -v cmd/migrate/*.go
 
 .PHONY: install
 install: ## install

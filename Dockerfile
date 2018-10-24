@@ -7,12 +7,18 @@ RUN echo "download mod" \
 
 COPY . .
 RUN echo "install app" \
-    && make install
+    && make build
 
-CMD ["zwei"]
+FROM golang
+WORKDIR /home
 
-# FROM golang:alpine
-# RUN apk add --no-cache gcc musl-dev
-# COPY --from=builder /home/app/cmd/zwei/fonts ./fonts
-# COPY --from=builder /go/bin/zwei /usr/local/bin/
+# migration
+COPY --from=builder /home/app/cmd/migrate/idiom.json ./idiom.json
+COPY --from=builder /home/app/bin/migrate /usr/local/bin/
+
+# zwei
+COPY --from=builder /home/app/cmd/zwei/fonts ./fonts
+COPY --from=builder /home/app/bin/zwei /usr/local/bin/
+
+CMD [ "zwei" ]
 
