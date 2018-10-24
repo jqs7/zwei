@@ -14,11 +14,7 @@ import (
 )
 
 func main() {
-
-	err := env.Init()
-	if err != nil {
-		log.Fatalln(err.Error())
-	}
+	env.Init()
 
 	filterConfig := new(gocaptcha.FilterConfig)
 	filterConfig.Init()
@@ -38,6 +34,12 @@ func main() {
 		log.Fatalln(err)
 	}
 
+	
+	var botOpts []tg.ConfigFunc
+	if env.Spec.Debug {
+		botOpts = append(botOpts, tg.Debug())
+	}
+	
 	pwd, _ := os.Getwd()
 	fontPath := pwd + "/fonts/"
 	bot := tg.NewBot(
@@ -56,8 +58,9 @@ func main() {
 			IdiomCount:         idiomCount,
 			ImageFilterManager: gocaptcha.CreateImageFilterManagerByConfig(filterConfig),
 		},
-		tg.Debug(),
+		botOpts...,
 	)
+
 	go func() {
 		err := scheduler.New(db.Instance(), bot.BotAPI).Run()
 		log.Panic(err)

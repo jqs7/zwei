@@ -13,10 +13,7 @@ import (
 func main() {
 	flag.Parse()
 
-	err := env.Init()
-	if err != nil {
-		log.Fatalln(err.Error())
-	}
+	env.Init()
 
 	oldVer, newVer, err := migrations.Run(db.Instance(), flag.Args()...)
 	if err != nil {

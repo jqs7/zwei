@@ -22,7 +22,7 @@ postgres: ## run postgres in docker
 
 .PHONY: migration
 migration: ## migration
-	cd cmd/migrate && ./migrate
+	cd cmd/migrate && ./migrate up
 
 .PHONY: build
 build: ## build

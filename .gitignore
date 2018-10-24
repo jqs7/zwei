@@ -2,3 +2,5 @@
 cmd/zwei/zwei
 
 bin/
+ansible
+test_bot.sh
