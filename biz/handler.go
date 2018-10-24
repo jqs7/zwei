@@ -4,7 +4,10 @@ import (
 	"bytes"
 	"fmt"
 	"image/png"
+	"log"
 	"math/rand"
+	"os"
+	"path/filepath"
 	"strconv"
 	"time"
 
@@ -21,6 +24,47 @@ type Handler struct {
 	*gocaptcha.ImageConfig
 	*gocaptcha.ImageFilterManager
 	IdiomCount int
+}
+
+func NewHandler(noiseNum int) Handler {
+	idiomCount, err := db.Instance().Model(new(model.Idiom)).Count()
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	filterConfig := new(gocaptcha.FilterConfig)
+	filterConfig.Init()
+	filterConfig.Filters = []string{
+		gocaptcha.IMAGE_FILTER_NOISE_LINE,
+		gocaptcha.IMAGE_FILTER_NOISE_POINT,
+		gocaptcha.IMAGE_FILTER_STRIKE,
+	}
+	for _, v := range filterConfig.Filters {
+		filterConfigGroup := new(gocaptcha.FilterConfigGroup)
+		filterConfigGroup.Init()
+		filterConfigGroup.SetItem("Num", strconv.Itoa(noiseNum))
+		filterConfig.SetGroup(v, filterConfigGroup)
+	}
+
+	pwd, err := os.Getwd()
+	if err != nil {
+		log.Fatalln(err)
+	}
+	fontPath := filepath.Join(pwd, "fonts")
+	return Handler{
+		ImageConfig: &gocaptcha.ImageConfig{
+			Width:    320,
+			Height:   100,
+			FontSize: 80,
+			FontFiles: []string{
+				filepath.Join(fontPath, "STFANGSO.ttf"),
+				filepath.Join(fontPath, "STHEITI.ttf"),
+				filepath.Join(fontPath, "STXIHEI.ttf"),
+			},
+		},
+		IdiomCount:         idiomCount,
+		ImageFilterManager: gocaptcha.CreateImageFilterManagerByConfig(filterConfig),
+	}
 }
 
 func (Handler) BotEnterGroup(*tgbotapi.BotAPI, *tgbotapi.Chat) error {
