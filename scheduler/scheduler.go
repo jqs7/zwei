@@ -83,29 +83,23 @@ func (s Scheduler) updateMsgExpire(task model.Task) error {
 		WherePK().First()
 	timeSub := blackList.ExpireAt.Sub(time.Now()) / time.Second
 	if timeSub <= 0 {
-		err := s.delAndKick(blackList)
-		if err != nil {
-			return err
-		}
-		return nil
+		return s.delAndKick(blackList)
 	}
 	s.updateMsg(blackList, timeSub)
 	return errors.New("not expired")
 }
 
 func (s Scheduler) delAndKick(blackList *model.BlackList) error {
-	if _, err := s.Send(tgbotapi.NewDeleteMessage(
+	s.Send(tgbotapi.NewDeleteMessage(
 		blackList.GroupId, blackList.CaptchaMsgId,
-	)); err != nil {
-		return err
-	}
-	_, err := s.KickChatMember(tgbotapi.KickChatMemberConfig{
+	))
+	s.KickChatMember(tgbotapi.KickChatMemberConfig{
 		ChatMemberConfig: tgbotapi.ChatMemberConfig{
 			ChatID: blackList.GroupId,
 			UserID: blackList.UserId,
 		},
 	})
-	return err
+	return nil
 }
 
 func (s Scheduler) updateMsg(blackList *model.BlackList, timeSub time.Duration) error {
