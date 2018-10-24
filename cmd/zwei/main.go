@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"os"
 
 	"github.com/hanguofeng/gocaptcha"
 	"github.com/jqs7/zwei/biz"
@@ -22,7 +23,6 @@ func main() {
 		gocaptcha.IMAGE_FILTER_NOISE_POINT,
 		gocaptcha.IMAGE_FILTER_STRIKE,
 	}
-
 	for _, v := range filterConfig.Filters {
 		filterConfigGroup := new(gocaptcha.FilterConfigGroup)
 		filterConfigGroup.Init()
@@ -34,10 +34,14 @@ func main() {
 		log.Fatalln(err)
 	}
 
+	
 	var botOpts []tg.ConfigFunc
 	if env.Spec.Debug {
 		botOpts = append(botOpts, tg.Debug())
 	}
+	
+	pwd, _ := os.Getwd()
+	fontPath := pwd + "/fonts/"
 	bot := tg.NewBot(
 		env.Spec.Token,
 		biz.Handler{
@@ -46,9 +50,9 @@ func main() {
 				Height:   100,
 				FontSize: 80,
 				FontFiles: []string{
-					"fonts/STFANGSO.ttf",
-					"fonts/STHEITI.ttf",
-					"fonts/STXIHEI.ttf",
+					fontPath + "STFANGSO.ttf",
+					fontPath + "STHEITI.ttf",
+					fontPath + "STXIHEI.ttf",
 				},
 			},
 			IdiomCount:         idiomCount,

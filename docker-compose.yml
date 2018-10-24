@@ -1,16 +1,19 @@
 version: "3"
 
 services:
-  
   zwei:
     build: .
+    # image: golang
+    # volumes:
+    #   - ./:/home/app
     environment:
       - ZWEI_ADDRESS=postgres
       - ZWEI_USER=jqs7
       - ZWEI_DATABASE=zwei
       # test bot token
-      - ZWEI_TOKEN=718186143:AAEUuRFxNUBETqw9mdcVr-5QRzCXBLyn9Bg 
-
+      - ZWEI_TOKEN=718186143:AAEUuRFxNUBETqw9mdcVr-5QRzCXBLyn9Bg
+    tty: true
+    command: bash
   postgres:
     image: postgres
     environment:

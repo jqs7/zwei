@@ -1,6 +1,7 @@
 .DEFAULT_GOAL := help
 
 APP_NAME=zwei
+APP_CMD_DIR=cmd/$(APP_NAME)
 APP_BINARY=bin/$(APP_NAME)
 APP_BINARY_UNIX=bin/$(APP_NAME)_unix_amd64
 
@@ -12,20 +13,25 @@ test: ## test
 
 .PHONY: zwei
 zwei: ## run zwei in docker 
+	docker-compose build zwei
 	docker-compose up -d zwei
 
 .PHONY: postgres
 postgres: ## run postgres in docker 
 	docker-compose up -d postgres
 
-.PHONY: build
-build: ## build
-	go build -o $(APP_BINARY) cmd/zwei/main.go
-	go build -o cmd/migrate/bin/migrate cmd/migrate/*.go
-
 .PHONY: migration
 migration: ## migration
 	cd cmd/migrate && ./migrate up
+
+.PHONY: build
+build: ## build
+	go build -o $(APP_BINARY) -v $(APP_CMD_DIR)/main.go
+	go build -o bin/migrate -v cmd/migrate/*.go
+
+.PHONY: install
+install: ## install
+	go install $(APP_CMD_DIR)/main.go
 
 .PHONY: clean
 clean: ## clean 
@@ -39,7 +45,7 @@ run: build ## run
 
 .PHONY: build-linux
 build-linux: ## build linux
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o $(APP_BINARY_UNIX) cmd/zwei/main.go
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o $(APP_BINARY_UNIX) -v $(APP_CMD_DIR)/main.go
 
 
 .PHONY: help

@@ -1,16 +1,24 @@
-FROM golang:1.11-alpine AS builder
-RUN apk add --no-cache git make 
+FROM golang AS builder
+
 WORKDIR /home/app
 COPY go.mod go.sum ./
 RUN echo "download mod" \
     && go mod download
 
 COPY . .
-RUN echo "build app" \
-    && make build-linux
+RUN echo "install app" \
+    && make build
 
-FROM alpine
-# RUN apk add --no-cache ca-
-COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-COPY --from=builder /home/app/bin/zwei_unix_amd64 ./
-ENTRYPOINT ["./zwei_unix_amd64"]
+FROM golang
+WORKDIR /home
+
+# migration
+COPY --from=builder /home/app/cmd/migrate/idiom.json ./idiom.json
+COPY --from=builder /home/app/bin/migrate /usr/local/bin/
+
+# zwei
+COPY --from=builder /home/app/cmd/zwei/fonts ./fonts
+COPY --from=builder /home/app/bin/zwei /usr/local/bin/
+
+CMD [ "zwei" ]
+
