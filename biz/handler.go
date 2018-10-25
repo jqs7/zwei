@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/go-pg/pg"
@@ -97,7 +98,8 @@ func (h Handler) sendCaptcha(bot *tgbotapi.BotAPI,
 		Bytes: idiom.CaptchaImg,
 	})
 	var expireAfter time.Duration = 300
-	userLink := fmt.Sprintf(model.UserLinkTemplate, user.FirstName+" "+user.LastName, user.ID)
+	fullName := getFullName(user.FirstName, user.LastName)
+	userLink := fmt.Sprintf(model.UserLinkTemplate, fullName, user.ID)
 	photo.Caption = fmt.Sprintf(model.EnterRoomMsg, userLink, chat.Title, expireAfter)
 	photo.ParseMode = tgbotapi.ModeMarkdown
 	photo.ReplyMarkup = model.InlineKeyboard
@@ -256,4 +258,12 @@ func (h Handler) GetRandomIdiom() (*model.Idiom, error) {
 	}
 	idiom.CaptchaImg = buffer.Bytes()
 	return idiom, nil
+}
+
+func getFullName(firstName, lastName string) string {
+	fullName := strings.TrimSpace(firstName + " " + lastName)
+	if len([]rune(fullName)) > 10 {
+		fullName = string([]rune(fullName)[:10]) + "..."
+	}
+	return fullName
 }
