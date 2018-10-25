@@ -63,7 +63,7 @@ func (s Scheduler) processTask(task model.Task) error {
 	case model.TaskTypeUpdateMsgExpire:
 		if err := s.updateMsgExpire(task); err != nil {
 			_, err = s.Model(&task).WherePK().
-				Set("run_at = ?", time.Now().Add(time.Second*3)).
+				Set("run_at = ?", time.Now().Add(model.DefaultRefreshDuration)).
 				Set("status = ?", model.TaskStatusPlan).
 				Update()
 			return err
@@ -129,7 +129,7 @@ func AddUpdateMsgExpireTask(db *pg.DB, blackListID, chatID int64, msgID int) err
 	return db.Insert(&model.Task{
 		Type:        model.TaskTypeUpdateMsgExpire,
 		Status:      model.TaskStatusPlan,
-		RunAt:       time.Now().Add(time.Second * 3),
+		RunAt:       time.Now().Add(model.DefaultRefreshDuration),
 		ChatID:      chatID,
 		MsgID:       msgID,
 		BlackListId: blackListID,

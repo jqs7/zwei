@@ -97,10 +97,9 @@ func (h Handler) sendCaptcha(bot *tgbotapi.BotAPI,
 		Name:  strconv.Itoa(user.ID),
 		Bytes: idiom.CaptchaImg,
 	})
-	var expireAfter time.Duration = 300
 	fullName := getFullName(user.FirstName, user.LastName)
 	userLink := fmt.Sprintf(model.UserLinkTemplate, fullName, user.ID)
-	photo.Caption = fmt.Sprintf(model.EnterRoomMsg, userLink, chat.Title, expireAfter)
+	photo.Caption = fmt.Sprintf(model.EnterRoomMsg, userLink, chat.Title, model.DefaultCaptchaExpire/time.Second)
 	photo.ParseMode = tgbotapi.ModeMarkdown
 	photo.ReplyMarkup = model.InlineKeyboard
 	photoMsg, err := bot.Send(photo)
@@ -115,7 +114,7 @@ func (h Handler) sendCaptcha(bot *tgbotapi.BotAPI,
 	blackList.IdiomId = idiom.Id
 	blackList.CaptchaMsgId = photoMsg.MessageID
 	blackList.UserLink = userLink
-	blackList.ExpireAt = time.Now().Add(time.Second * expireAfter)
+	blackList.ExpireAt = time.Now().Add(model.DefaultCaptchaExpire)
 	if _, err := db.Instance().Model(blackList).
 		Column("idiom_id", "captcha_msg_id", "user_link", "expire_at").
 		WherePK().Update(); err != nil {
