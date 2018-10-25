@@ -98,6 +98,7 @@ func (s Scheduler) delAndKick(blackList *model.BlackList) error {
 			ChatID: blackList.GroupId,
 			UserID: blackList.UserId,
 		},
+		UntilDate: time.Now().Add(time.Minute).Unix(),
 	})
 	return nil
 }

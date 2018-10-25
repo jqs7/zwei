@@ -18,4 +18,4 @@ var InlineKeyboard = tgbotapi.NewInlineKeyboardMarkup(
 var UserLinkTemplate = "[%s](tg://user?id=%d)"
 var EnterRoomMsg = "%s 你好，欢迎加入 %s，本群已启用新成员验证模式，请发送图片验证码内容。\n" +
 	"在验证通过之前，你所发送的所有消息都将会被删除。\n" +
-	"本消息将在 %d 秒后失效，届时若未通过验证，你将被移出群组。"
+	"本消息将在 %d 秒后失效，届时若未通过验证，你将被移出群组，且一分钟之内无法再加入本群。"
