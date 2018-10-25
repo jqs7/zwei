@@ -1,5 +1,6 @@
 .idea
 cmd/zwei/zwei
+cmd/migrate/migrate
 
 bin/
 ansible
