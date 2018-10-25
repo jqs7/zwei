@@ -7,7 +7,6 @@ import (
 
 	"github.com/go-pg/pg"
 	"github.com/go-telegram-bot-api/telegram-bot-api"
-	"github.com/jqs7/zwei/biz/values"
 	"github.com/jqs7/zwei/model"
 )
 
@@ -108,9 +107,9 @@ func (s Scheduler) updateMsg(blackList *model.BlackList, timeSub time.Duration) 
 	if err != nil {
 		return err
 	}
-	caption := fmt.Sprintf(values.EnterRoomMsg, blackList.UserLink, chat.Title, timeSub)
+	caption := fmt.Sprintf(model.EnterRoomMsg, blackList.UserLink, chat.Title, timeSub)
 	editor := tgbotapi.NewEditMessageCaption(blackList.GroupId, blackList.CaptchaMsgId, caption)
-	editor.ReplyMarkup = &values.InlineKeyboard
+	editor.ReplyMarkup = &model.InlineKeyboard
 	editor.ParseMode = tgbotapi.ModeMarkdown
 	_, err = s.Send(editor)
 	return err

@@ -14,7 +14,6 @@ import (
 	"github.com/go-pg/pg"
 	"github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/hanguofeng/gocaptcha"
-	"github.com/jqs7/zwei/biz/values"
 	"github.com/jqs7/zwei/bot/extra"
 	"github.com/jqs7/zwei/db"
 	"github.com/jqs7/zwei/model"
@@ -98,10 +97,10 @@ func (h Handler) sendCaptcha(bot *tgbotapi.BotAPI,
 		Bytes: idiom.CaptchaImg,
 	})
 	var expireAfter time.Duration = 300
-	userLink := fmt.Sprintf(values.UserLinkTemplate, user.FirstName+" "+user.LastName, user.ID)
-	photo.Caption = fmt.Sprintf(values.EnterRoomMsg, userLink, chat.Title, expireAfter)
+	userLink := fmt.Sprintf(model.UserLinkTemplate, user.FirstName+" "+user.LastName, user.ID)
+	photo.Caption = fmt.Sprintf(model.EnterRoomMsg, userLink, chat.Title, expireAfter)
 	photo.ParseMode = tgbotapi.ModeMarkdown
-	photo.ReplyMarkup = values.InlineKeyboard
+	photo.ReplyMarkup = model.InlineKeyboard
 	photoMsg, err := bot.Send(photo)
 	if err != nil {
 		return err
@@ -159,9 +158,9 @@ func (h Handler) OnCallbackQuery(bot *tgbotapi.BotAPI, query tgbotapi.CallbackQu
 		return err
 	}
 	switch query.Data {
-	case values.CallbackTypeRefresh:
+	case model.CallbackTypeRefresh:
 		return h.refresh(bot, blackList, query)
-	case values.CallbackTypePassThrough:
+	case model.CallbackTypePassThrough:
 		return h.passThrough(bot, blackList, query)
 	}
 	return nil
@@ -185,9 +184,9 @@ func (h Handler) refresh(bot *tgbotapi.BotAPI, blackList *model.BlackList, query
 	}
 	if err := extra.UpdateMsgPhoto(
 		bot, query.Message.Chat.ID, query.Message.MessageID,
-		fmt.Sprintf(values.EnterRoomMsg, blackList.UserLink, query.Message.Chat.Title,
+		fmt.Sprintf(model.EnterRoomMsg, blackList.UserLink, query.Message.Chat.Title,
 			time.Until(blackList.ExpireAt)/time.Second),
-		tgbotapi.ModeMarkdown, values.InlineKeyboard, tgbotapi.FileBytes{
+		tgbotapi.ModeMarkdown, model.InlineKeyboard, tgbotapi.FileBytes{
 			Name:  strconv.Itoa(query.From.ID),
 			Bytes: idiom.CaptchaImg,
 		},
