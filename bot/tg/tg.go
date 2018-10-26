@@ -1,6 +1,7 @@
 package tg
 
 import (
+	"context"
 	"log"
 
 	"github.com/go-telegram-bot-api/telegram-bot-api"
@@ -55,11 +56,16 @@ func NewBot(botAPI string, handler biz.IBiz, fs ...ConfigFunc) *Bot {
 	}
 }
 
-func (b Bot) Run() {
-	for update := range b.updates {
-		err := b.processUpdate(update)
-		if err != nil {
-			log.Printf("got err: %+v\n", err)
+func (b Bot) Run(ctx context.Context) {
+	for {
+		select {
+		case update := <-b.updates:
+			err := b.processUpdate(update)
+			if err != nil {
+				log.Printf("got err: %+v\n", err)
+			}
+		case <-ctx.Done():
+			return
 		}
 	}
 }

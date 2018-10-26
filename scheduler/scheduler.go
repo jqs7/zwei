@@ -1,6 +1,7 @@
 package scheduler
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"time"
@@ -26,21 +27,26 @@ func New(db *pg.DB, bot *tgbotapi.BotAPI) *Scheduler {
 	}
 }
 
-func (s Scheduler) Run() error {
+func (s Scheduler) Run(ctx context.Context) error {
 	ticker := time.NewTicker(time.Second * 5)
 	defer ticker.Stop()
-	for range ticker.C {
-		var tasks []model.Task
-		err := s.Model(&model.Task{}).
-			Where("status = ?", model.TaskStatusPlan).
-			Where("run_at <= ?", time.Now()).
-			Limit(10).
-			Select(&tasks)
-		if err != nil {
-			return err
-		}
-		for _, task := range tasks {
-			s.processTask(task)
+	for {
+		select {
+		case <-ticker.C:
+			var tasks []model.Task
+			err := s.Model(&model.Task{}).
+				Where("status = ?", model.TaskStatusPlan).
+				Where("run_at <= ?", time.Now()).
+				Limit(10).
+				Select(&tasks)
+			if err != nil {
+				return err
+			}
+			for _, task := range tasks {
+				s.processTask(task)
+			}
+		case <-ctx.Done():
+			return nil
 		}
 	}
 	return nil
