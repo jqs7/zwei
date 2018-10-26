@@ -6,6 +6,7 @@ github.com/fsnotify/fsnotify v1.4.7 h1:IXs+QLmnXW2CcXuY+8Mzv/fWEsPGWxqefPtCP5CnV
 github.com/fsnotify/fsnotify v1.4.7/go.mod h1:jwhsz4b93w/PPRr/qN1Yymfu8t87LnFCMoQvtojpjFo=
 github.com/go-pg/migrations v6.2.0+incompatible h1:OCaoPbrTHwyd+zgWbbhVZyZ8CekfD2xbtap7BZAb27Q=
 github.com/go-pg/migrations v6.2.0+incompatible/go.mod h1:DtFiob3rFxsj0He8fye6Ta4eukFW80IfdY10zb2yH1c=
+github.com/go-pg/migrations v6.3.0+incompatible/go.mod h1:DtFiob3rFxsj0He8fye6Ta4eukFW80IfdY10zb2yH1c=
 github.com/go-pg/pg v6.15.0+incompatible h1:jwhQz62bkCc+VqBXyUTHzcESgACF6S9qsHAJigcLYzQ=
 github.com/go-pg/pg v6.15.0+incompatible/go.mod h1:a2oXow+aFOrvwcKs3eIA0lNFmMilrxK2sOkB5NWe0vA=
 github.com/go-telegram-bot-api/telegram-bot-api v4.6.4+incompatible h1:2cauKuaELYAEARXRkq2LrJ0yDDv1rW7+wrTEdVL3uaU=
