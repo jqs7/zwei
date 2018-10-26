@@ -113,16 +113,17 @@ func (h Handler) sendCaptcha(bot *tgbotapi.BotAPI,
 	chat *tgbotapi.Chat, user tgbotapi.User,
 	blackList *model.BlackList, idiom *model.Idiom,
 ) error {
-	photo := tgbotapi.NewPhotoUpload(chat.ID, tgbotapi.FileBytes{
+	captchaMsg := tgbotapi.NewPhotoUpload(chat.ID, tgbotapi.FileBytes{
 		Name:  strconv.Itoa(user.ID),
 		Bytes: idiom.CaptchaImg,
 	})
 	fullName := getFullName(user.FirstName, user.LastName)
 	userLink := fmt.Sprintf(model.UserLinkTemplate, fullName, user.ID)
-	photo.Caption = fmt.Sprintf(model.EnterRoomMsg, userLink, chat.Title, model.DefaultCaptchaExpire/time.Second)
-	photo.ParseMode = tgbotapi.ModeMarkdown
-	photo.ReplyMarkup = model.InlineKeyboard
-	photoMsg, err := bot.Send(photo)
+	captchaMsg.Caption = fmt.Sprintf(model.EnterRoomMsg, userLink, chat.Title, model.DefaultCaptchaExpire/time.Second)
+	captchaMsg.ParseMode = tgbotapi.ModeMarkdown
+	captchaMsg.ReplyMarkup = model.InlineKeyboard
+	captchaMsg.DisableNotification = true
+	photoMsg, err := bot.Send(captchaMsg)
 	if err != nil {
 		return err
 	}
