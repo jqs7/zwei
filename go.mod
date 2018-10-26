@@ -3,7 +3,7 @@ module github.com/jqs7/zwei
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-pg/migrations v6.2.0+incompatible
-	github.com/go-pg/pg v6.15.0+incompatible
+	github.com/go-pg/pg v6.15.1+incompatible
 	github.com/go-telegram-bot-api/telegram-bot-api v4.6.4+incompatible
 	github.com/hanguofeng/gocaptcha v1.0.7
 	github.com/json-iterator/go v1.1.5

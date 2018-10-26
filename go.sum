@@ -8,6 +8,7 @@ github.com/go-pg/migrations v6.2.0+incompatible h1:OCaoPbrTHwyd+zgWbbhVZyZ8CekfD
 github.com/go-pg/migrations v6.2.0+incompatible/go.mod h1:DtFiob3rFxsj0He8fye6Ta4eukFW80IfdY10zb2yH1c=
 github.com/go-pg/pg v6.15.0+incompatible h1:jwhQz62bkCc+VqBXyUTHzcESgACF6S9qsHAJigcLYzQ=
 github.com/go-pg/pg v6.15.0+incompatible/go.mod h1:a2oXow+aFOrvwcKs3eIA0lNFmMilrxK2sOkB5NWe0vA=
+github.com/go-pg/pg v6.15.1+incompatible/go.mod h1:a2oXow+aFOrvwcKs3eIA0lNFmMilrxK2sOkB5NWe0vA=
 github.com/go-telegram-bot-api/telegram-bot-api v4.6.4+incompatible h1:2cauKuaELYAEARXRkq2LrJ0yDDv1rW7+wrTEdVL3uaU=
 github.com/go-telegram-bot-api/telegram-bot-api v4.6.4+incompatible/go.mod h1:qf9acutJ8cwBUhm1bqgz6Bei9/C/c93FPDljKWwsOgM=
 github.com/golang/protobuf v1.2.0 h1:P3YflyNX/ehuJFLhxviNdFxQPkGK5cDcApsge1SqnvM=
