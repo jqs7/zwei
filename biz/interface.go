@@ -9,4 +9,5 @@ type IBiz interface {
 	NewMemberInGroup(*tgbotapi.BotAPI, *tgbotapi.Chat, tgbotapi.User) error
 	OnGroupMsg(*tgbotapi.BotAPI, tgbotapi.Message) error
 	OnCallbackQuery(*tgbotapi.BotAPI, tgbotapi.CallbackQuery) error
+	OnMemberLeftGroup(*tgbotapi.BotAPI, *tgbotapi.Chat, tgbotapi.User) error
 }

@@ -89,6 +89,26 @@ func (h Handler) NewMemberInGroup(bot *tgbotapi.BotAPI, chat *tgbotapi.Chat, use
 	return h.sendCaptcha(bot, chat, user, blackList, idiom)
 }
 
+func (h Handler) OnMemberLeftGroup(bot *tgbotapi.BotAPI, chat *tgbotapi.Chat, user tgbotapi.User) error {
+	blackList := &model.BlackList{
+		GroupId: chat.ID,
+		UserId:  user.ID,
+	}
+	if err := db.Instance().Model(blackList).
+		Where("group_id = ?group_id").
+		Where("user_id = ?user_id").
+		Last(); err != nil {
+		return err
+	}
+	bot.DeleteMessage(tgbotapi.NewDeleteMessage(blackList.GroupId, blackList.CaptchaMsgId))
+	scheduler.UpdateMsgExpireTaskDone(db.Instance(), blackList.Id)
+	_, err := db.Instance().Model(blackList).
+		Where("group_id = ?group_id").
+		Where("user_id = ?user_id").
+		Delete()
+	return err
+}
+
 func (h Handler) sendCaptcha(bot *tgbotapi.BotAPI,
 	chat *tgbotapi.Chat, user tgbotapi.User,
 	blackList *model.BlackList, idiom *model.Idiom,

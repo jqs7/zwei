@@ -2,7 +2,6 @@ package scheduler
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"time"
 
@@ -68,14 +67,11 @@ func (s Scheduler) processTask(task model.Task) error {
 		return err
 	case model.TaskTypeUpdateMsgExpire:
 		if err := s.updateMsgExpire(task); err != nil {
-			_, err = s.Model(&task).WherePK().
-				Set("run_at = ?", time.Now().Add(model.DefaultRefreshDuration)).
-				Set("status = ?", model.TaskStatusPlan).
-				Update()
 			return err
 		}
 		_, err = s.Model(&task).WherePK().
-			Set("status = ?", model.TaskStatusDone).
+			Set("run_at = ?", time.Now().Add(model.DefaultRefreshDuration)).
+			Set("status = ?", model.TaskStatusPlan).
 			Update()
 		return err
 	}
@@ -88,16 +84,12 @@ func (s Scheduler) updateMsgExpire(task model.Task) error {
 		WherePK().First()
 	timeSub := blackList.ExpireAt.Sub(time.Now()) / time.Second
 	if timeSub <= 0 {
-		return s.delAndKick(blackList)
+		return s.kickUser(blackList)
 	}
-	s.updateMsg(blackList, timeSub)
-	return errors.New("not expired")
+	return s.updateMsg(blackList, timeSub)
 }
 
-func (s Scheduler) delAndKick(blackList *model.BlackList) error {
-	s.Send(tgbotapi.NewDeleteMessage(
-		blackList.GroupId, blackList.CaptchaMsgId,
-	))
+func (s Scheduler) kickUser(blackList *model.BlackList) error {
 	s.KickChatMember(tgbotapi.KickChatMemberConfig{
 		ChatMemberConfig: tgbotapi.ChatMemberConfig{
 			ChatID: blackList.GroupId,

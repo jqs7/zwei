@@ -55,6 +55,6 @@ func (b Bot) onNewChatMembers(msg tgbotapi.Message) error {
 }
 
 func (b Bot) onLeftChatMember(msg tgbotapi.Message) error {
-	_, err := b.DeleteMessage(tgbotapi.NewDeleteMessage(msg.Chat.ID, msg.MessageID))
-	return err
+	b.DeleteMessage(tgbotapi.NewDeleteMessage(msg.Chat.ID, msg.MessageID))
+	return b.OnMemberLeftGroup(b.BotAPI, msg.Chat, *msg.LeftChatMember)
 }
