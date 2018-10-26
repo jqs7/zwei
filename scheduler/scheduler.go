@@ -66,7 +66,10 @@ func (s Scheduler) processTask(task model.Task) error {
 			Update()
 		return err
 	case model.TaskTypeUpdateMsgExpire:
-		if err := s.updateMsgExpire(task); err != nil {
+		if kick := s.updateMsgExpire(task); kick {
+			_, err = s.Model(&task).WherePK().
+				Set("status = ?", model.TaskStatusDone).
+				Update()
 			return err
 		}
 		_, err = s.Model(&task).WherePK().
@@ -78,15 +81,17 @@ func (s Scheduler) processTask(task model.Task) error {
 	return nil
 }
 
-func (s Scheduler) updateMsgExpire(task model.Task) error {
+func (s Scheduler) updateMsgExpire(task model.Task) (kick bool) {
 	blackList := &model.BlackList{Id: task.BlackListId}
 	s.Model(blackList).
 		WherePK().First()
 	timeSub := blackList.ExpireAt.Sub(time.Now()) / time.Second
 	if timeSub <= 0 {
-		return s.kickUser(blackList)
+		s.kickUser(blackList)
+		return true
 	}
-	return s.updateMsg(blackList, timeSub)
+	s.updateMsg(blackList, timeSub)
+	return false
 }
 
 func (s Scheduler) kickUser(blackList *model.BlackList) error {
