@@ -10,4 +10,5 @@ type IBiz interface {
 	OnGroupMsg(*tgbotapi.BotAPI, tgbotapi.Message) error
 	OnCallbackQuery(*tgbotapi.BotAPI, tgbotapi.CallbackQuery) error
 	OnMemberLeftGroup(*tgbotapi.BotAPI, *tgbotapi.Chat, tgbotapi.User) error
+	OnPrivateCommand(bot *tgbotapi.BotAPI, msg tgbotapi.Message, command string, args ...string) error
 }

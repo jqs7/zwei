@@ -72,6 +72,22 @@ func (Handler) BotEnterGroup(*tgbotapi.BotAPI, *tgbotapi.Chat) error {
 	return nil
 }
 
+func (h Handler) OnPrivateCommand(bot *tgbotapi.BotAPI, msg tgbotapi.Message, command string, args ...string) error {
+	switch command {
+	case "help", "start":
+		return h.sendHelpMsg(bot, msg.Chat.ID)
+	}
+	return nil
+}
+
+func (h Handler) sendHelpMsg(bot *tgbotapi.BotAPI, toUserID int64) error {
+	msg := tgbotapi.NewMessage(toUserID, model.HelpMsg)
+	msg.DisableNotification = true
+	msg.DisableWebPagePreview = true
+	_, err := bot.Send(msg)
+	return err
+}
+
 func (h Handler) NewMemberInGroup(bot *tgbotapi.BotAPI, chat *tgbotapi.Chat, user tgbotapi.User) error {
 	blackList := &model.BlackList{
 		GroupId: chat.ID,

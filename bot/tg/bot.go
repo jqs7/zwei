@@ -1,6 +1,8 @@
 package tg
 
 import (
+	"strings"
+
 	"github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/jqs7/zwei/biz"
 )
@@ -34,6 +36,11 @@ func (b Bot) onMessage(msg tgbotapi.Message) error {
 	}
 	if msg.Chat.IsGroup() || msg.Chat.IsSuperGroup() {
 		return b.OnGroupMsg(b.BotAPI, msg)
+	}
+	if msg.IsCommand() {
+		return b.OnPrivateCommand(b.BotAPI, msg,
+			msg.Command(), strings.Split(msg.CommandArguments(), " ")...,
+		)
 	}
 	return nil
 }
