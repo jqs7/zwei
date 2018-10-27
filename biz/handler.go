@@ -90,21 +90,23 @@ func (h Handler) NewMemberInGroup(bot *tgbotapi.BotAPI, chat *tgbotapi.Chat, use
 }
 
 func (h Handler) OnMemberLeftGroup(bot *tgbotapi.BotAPI, chat *tgbotapi.Chat, user tgbotapi.User) error {
-	blackList := &model.BlackList{
-		GroupId: chat.ID,
-		UserId:  user.ID,
-	}
-	if err := db.Instance().Model(blackList).
-		Where("group_id = ?group_id").
-		Where("user_id = ?user_id").
-		Last(); err != nil {
+	var blackLists []model.BlackList
+	if err := db.Instance().Model(&blackLists).
+		Where("group_id = ?", chat.ID).
+		Where("user_id = ?", user.ID).
+		Select(); err != nil && err != pg.ErrNoRows {
 		return err
 	}
-	bot.DeleteMessage(tgbotapi.NewDeleteMessage(blackList.GroupId, blackList.CaptchaMsgId))
-	scheduler.UpdateMsgExpireTaskDone(db.Instance(), blackList.Id)
-	_, err := db.Instance().Model(blackList).
-		Where("group_id = ?group_id").
-		Where("user_id = ?user_id").
+	if len(blackLists) == 0 {
+		return nil
+	}
+	for _, blackList := range blackLists {
+		bot.DeleteMessage(tgbotapi.NewDeleteMessage(blackList.GroupId, blackList.CaptchaMsgId))
+		scheduler.UpdateMsgExpireTaskDone(db.Instance(), blackList.Id)
+	}
+	_, err := db.Instance().Model(&model.BlackList{}).
+		Where("group_id = ?", chat.ID).
+		Where("user_id = ?", user.ID).
 		Delete()
 	return err
 }

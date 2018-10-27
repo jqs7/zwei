@@ -66,35 +66,46 @@ func (s Scheduler) processTask(task model.Task) error {
 			Update()
 		return err
 	case model.TaskTypeUpdateMsgExpire:
-		if kick := s.updateMsgExpire(task); kick {
-			_, err = s.Model(&task).WherePK().
-				Set("status = ?", model.TaskStatusDone).
-				Update()
-			return err
-		}
-		_, err = s.Model(&task).WherePK().
-			Set("run_at = ?", time.Now().Add(model.DefaultRefreshDuration)).
-			Set("status = ?", model.TaskStatusPlan).
-			Update()
-		return err
+		return s.updateMsgExpire(task)
 	}
 	return nil
 }
 
-func (s Scheduler) updateMsgExpire(task model.Task) (kick bool) {
+func (s Scheduler) updateMsgExpire(task model.Task) error {
 	blackList := &model.BlackList{Id: task.BlackListId}
-	s.Model(blackList).
-		WherePK().First()
+	err := s.Model(blackList).WherePK().First()
+	if err != nil {
+		return s.taskDone(&task)
+	}
 	timeSub := blackList.ExpireAt.Sub(time.Now()) / time.Second
 	if timeSub <= 0 {
-		s.kickUser(blackList)
-		return true
+		s.kickUserAndDelCaptcha(blackList)
+		return s.taskDone(&task)
 	}
-	s.updateMsg(blackList, timeSub)
-	return false
+	if err := s.updateMsg(blackList, timeSub); err != nil {
+		return s.taskDelay(&task, model.DefaultRefreshDuration)
+	}
+	return s.taskDelay(&task, model.DefaultRefreshDuration)
 }
 
-func (s Scheduler) kickUser(blackList *model.BlackList) error {
+func (s Scheduler) taskDone(task *model.Task) error {
+	_, err := s.Model(task).
+		WherePK().
+		Set("status = ?", model.TaskStatusDone).
+		Update()
+	return err
+}
+
+func (s Scheduler) taskDelay(task *model.Task, dur time.Duration) error {
+	_, err := s.Model(task).
+		WherePK().
+		Set("status = ?", model.TaskStatusPlan).
+		Set("run_at = ?", time.Now().Add(dur)).
+		Update()
+	return err
+}
+
+func (s Scheduler) kickUserAndDelCaptcha(blackList *model.BlackList) error {
 	s.KickChatMember(tgbotapi.KickChatMemberConfig{
 		ChatMemberConfig: tgbotapi.ChatMemberConfig{
 			ChatID: blackList.GroupId,
@@ -102,6 +113,9 @@ func (s Scheduler) kickUser(blackList *model.BlackList) error {
 		},
 		UntilDate: time.Now().Add(time.Minute).Unix(),
 	})
+	s.DeleteMessage(tgbotapi.NewDeleteMessage(
+		blackList.GroupId, blackList.CaptchaMsgId,
+	))
 	return nil
 }
 
