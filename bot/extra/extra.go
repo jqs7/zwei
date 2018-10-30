@@ -1,6 +1,7 @@
 package extra
 
 import (
+	"net/url"
 	"strconv"
 
 	"github.com/go-telegram-bot-api/telegram-bot-api"
@@ -12,6 +13,11 @@ func UpdateMsgPhoto(
 	caption, parseMode string,
 	markup tgbotapi.InlineKeyboardMarkup, file interface{},
 ) error {
+	media := "attach://photo"
+	fileID, withFileID := file.(string)
+	if withFileID {
+		media = fileID
+	}
 	media, err := jsoniter.MarshalToString(struct {
 		Type      string `json:"type"`
 		Media     string `json:"media"`
@@ -19,7 +25,7 @@ func UpdateMsgPhoto(
 		ParseMode string `json:"parse_mode"`
 	}{
 		Type:      "photo",
-		Media:     "attach://photo",
+		Media:     media,
 		Caption:   caption,
 		ParseMode: parseMode,
 	})
@@ -31,11 +37,21 @@ func UpdateMsgPhoto(
 		return err
 	}
 
-	_, err = bot.UploadFile("editMessageMedia", map[string]string{
+	reqParam := map[string]string{
 		"chat_id":      strconv.FormatInt(chatID, 10),
 		"message_id":   strconv.Itoa(messageID),
 		"media":        media,
 		"reply_markup": replyMarkup,
-	}, "photo", file)
+	}
+
+	if withFileID {
+		values := url.Values{}
+		for k, v := range reqParam {
+			values.Set(k, v)
+		}
+		_, err := bot.MakeRequest("editMessageMedia", values)
+		return err
+	}
+	_, err = bot.UploadFile("editMessageMedia", reqParam, "photo", file)
 	return err
 }

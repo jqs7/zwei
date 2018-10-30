@@ -76,7 +76,16 @@ func (h Handler) OnPrivateCommand(bot *tgbotapi.BotAPI, msg tgbotapi.Message, co
 	switch command {
 	case "help", "start":
 		return h.sendHelpMsg(bot, msg.Chat.ID)
+	case "donate":
+		return h.sendDonate(bot, msg.Chat.ID, model.CallbackTypeDonateWX)
 	}
+	return nil
+}
+
+func (h Handler) sendDonate(bot *tgbotapi.BotAPI, chatID int64, donateType string) error {
+	donateImg := tgbotapi.NewPhotoShare(chatID, model.Donates[donateType].ID)
+	donateImg.ReplyMarkup = model.DonatesKeyboard(donateType)
+	bot.Send(donateImg)
 	return nil
 }
 
@@ -188,20 +197,32 @@ func (h Handler) deleteMsg(bot *tgbotapi.BotAPI, chatID int64, messageID int) er
 }
 
 func (h Handler) OnCallbackQuery(bot *tgbotapi.BotAPI, query tgbotapi.CallbackQuery) error {
-	blackList := &model.BlackList{}
-	err := db.Instance().Model(blackList).
-		Where("group_id = ?", query.Message.Chat.ID).
-		Where("captcha_msg_id = ?", query.Message.MessageID).
-		First()
-	if err != nil {
-		_, err := bot.AnswerCallbackQuery(tgbotapi.NewCallback(query.ID, err.Error()))
-		return err
-	}
 	switch query.Data {
 	case model.CallbackTypeRefresh:
+		blackList := &model.BlackList{}
+		err := db.Instance().Model(blackList).
+			Where("group_id = ?", query.Message.Chat.ID).
+			Where("captcha_msg_id = ?", query.Message.MessageID).
+			First()
+		if err != nil {
+			_, err := bot.AnswerCallbackQuery(tgbotapi.NewCallback(query.ID, err.Error()))
+			return err
+		}
 		return h.refresh(bot, blackList, query)
 	case model.CallbackTypePassThrough:
+		blackList := &model.BlackList{}
+		err := db.Instance().Model(blackList).
+			Where("group_id = ?", query.Message.Chat.ID).
+			Where("captcha_msg_id = ?", query.Message.MessageID).
+			First()
+		if err != nil {
+			_, err := bot.AnswerCallbackQuery(tgbotapi.NewCallback(query.ID, err.Error()))
+			return err
+		}
 		return h.passThrough(bot, blackList, query)
+	case model.CallbackTypeDonateWX, model.CallbackTypeDonateAlipay:
+		return extra.UpdateMsgPhoto(bot, query.Message.Chat.ID, query.Message.MessageID, "", "",
+			model.DonatesKeyboard(query.Data), model.Donates[query.Data].ID)
 	}
 	return nil
 }

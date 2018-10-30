@@ -9,6 +9,9 @@ import (
 const (
 	CallbackTypeRefresh     = "Refresh"
 	CallbackTypePassThrough = "PassThrough"
+
+	CallbackTypeDonateWX     = "DonateWX"
+	CallbackTypeDonateAlipay = "DonateAlipay"
 )
 
 const (
@@ -33,3 +36,30 @@ var InlineKeyboard = tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardButtonData("通过验证[管理员]", CallbackTypePassThrough),
 	},
 )
+
+type DonateKV struct {
+	Key string
+	ID  string
+}
+
+var Donates = map[string]DonateKV{
+	CallbackTypeDonateWX: {
+		Key: "微信",
+		ID:  "AgADBQADI6gxG_OVyVZPEk79HZiSzz9h2zIABA2NBWY3mfZlkOwAAgI",
+	},
+	CallbackTypeDonateAlipay: {
+		Key: "支付宝",
+		ID:  "AgADBQADIqgxG_OVyVZoTf04FO5TuWhm2zIABBeF-IkG4kvIBucAAgI",
+	},
+}
+
+func DonatesKeyboard(donateType string) tgbotapi.InlineKeyboardMarkup {
+	var buttons []tgbotapi.InlineKeyboardButton
+	for k, v := range Donates {
+		if k == donateType {
+			v.Key = v.Key + "❤️"
+		}
+		buttons = append(buttons, tgbotapi.NewInlineKeyboardButtonData(v.Key, k))
+	}
+	return tgbotapi.NewInlineKeyboardMarkup(buttons)
+}
