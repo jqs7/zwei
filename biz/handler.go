@@ -83,10 +83,11 @@ func (h Handler) OnPrivateCommand(bot *tgbotapi.BotAPI, msg tgbotapi.Message, co
 }
 
 func (h Handler) sendDonate(bot *tgbotapi.BotAPI, chatID int64, donateType string) error {
-	donateImg := tgbotapi.NewPhotoShare(chatID, model.Donates[donateType].ID)
+	donateImg := tgbotapi.NewPhotoShare(chatID, model.Donates[donateType].FileID)
 	donateImg.ReplyMarkup = model.DonatesKeyboard(donateType)
-	bot.Send(donateImg)
-	return nil
+	donateImg.Caption = model.DonateMsg
+	_, err := bot.Send(donateImg)
+	return err
 }
 
 func (h Handler) sendHelpMsg(bot *tgbotapi.BotAPI, toUserID int64) error {
@@ -200,29 +201,29 @@ func (h Handler) OnCallbackQuery(bot *tgbotapi.BotAPI, query tgbotapi.CallbackQu
 	switch query.Data {
 	case model.CallbackTypeRefresh:
 		blackList := &model.BlackList{}
-		err := db.Instance().Model(blackList).
+		if err := db.Instance().Model(blackList).
 			Where("group_id = ?", query.Message.Chat.ID).
 			Where("captcha_msg_id = ?", query.Message.MessageID).
-			First()
-		if err != nil {
-			_, err := bot.AnswerCallbackQuery(tgbotapi.NewCallback(query.ID, err.Error()))
+			First(); err != nil {
 			return err
 		}
 		return h.refresh(bot, blackList, query)
 	case model.CallbackTypePassThrough:
 		blackList := &model.BlackList{}
-		err := db.Instance().Model(blackList).
+		if err := db.Instance().Model(blackList).
 			Where("group_id = ?", query.Message.Chat.ID).
 			Where("captcha_msg_id = ?", query.Message.MessageID).
-			First()
-		if err != nil {
-			_, err := bot.AnswerCallbackQuery(tgbotapi.NewCallback(query.ID, err.Error()))
+			First(); err != nil {
 			return err
 		}
 		return h.passThrough(bot, blackList, query)
 	case model.CallbackTypeDonateWX, model.CallbackTypeDonateAlipay:
-		return extra.UpdateMsgPhoto(bot, query.Message.Chat.ID, query.Message.MessageID, "", "",
-			model.DonatesKeyboard(query.Data), model.Donates[query.Data].ID)
+		if err := extra.UpdateMsgPhoto(bot, query.Message.Chat.ID, query.Message.MessageID, query.Message.Caption,
+			"", model.DonatesKeyboard(query.Data), model.Donates[query.Data].FileID); err != nil {
+			return err
+		}
+		_, err := bot.AnswerCallbackQuery(tgbotapi.NewCallback(query.ID, ""))
+		return err
 	}
 	return nil
 }

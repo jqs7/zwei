@@ -1,6 +1,7 @@
 package model
 
 import (
+	"sort"
 	"time"
 
 	"github.com/go-telegram-bot-api/telegram-bot-api"
@@ -22,7 +23,11 @@ const (
 	HelpMsg = `欢迎使用进群验证码机器人
 本机器人使用姿势：
 将本机器人加入需要启用验证的群组，设置为管理员，并授予 Delete messages，Ban users 权限即可
-本项目开源于：https://github.com/jqs7/zwei`
+本项目开源于：https://github.com/jqs7/zwei
+若本项目对你有所帮助，可点击 /donate 为本项目捐款`
+	DonateMsg = `所捐款项将用于：
+1. 作者的续命咖啡 ☕️
+2. 支付服务器等设施费用`
 )
 
 const (
@@ -38,28 +43,43 @@ var InlineKeyboard = tgbotapi.NewInlineKeyboardMarkup(
 )
 
 type DonateKV struct {
-	Key string
-	ID  string
+	Key    string
+	FileID string
 }
 
 var Donates = map[string]DonateKV{
 	CallbackTypeDonateWX: {
-		Key: "微信",
-		ID:  "AgADBQADI6gxG_OVyVZPEk79HZiSzz9h2zIABA2NBWY3mfZlkOwAAgI",
+		Key:    "微信",
+		FileID: "AgADBQADI6gxG_OVyVZPEk79HZiSzz9h2zIABA2NBWY3mfZlkOwAAgI",
 	},
 	CallbackTypeDonateAlipay: {
-		Key: "支付宝",
-		ID:  "AgADBQADIqgxG_OVyVZoTf04FO5TuWhm2zIABBeF-IkG4kvIBucAAgI",
+		Key:    "支付宝",
+		FileID: "AgADBQADIqgxG_OVyVZoTf04FO5TuWhm2zIABBeF-IkG4kvIBucAAgI",
 	},
 }
 
+type InlineKeyboardButtons []tgbotapi.InlineKeyboardButton
+
+func (iBtn InlineKeyboardButtons) Len() int {
+	return len(iBtn)
+}
+
+func (iBtn InlineKeyboardButtons) Less(i, j int) bool {
+	return iBtn[i].Text < iBtn[j].Text
+}
+
+func (iBtn InlineKeyboardButtons) Swap(i, j int) {
+	iBtn[i], iBtn[j] = iBtn[j], iBtn[i]
+}
+
 func DonatesKeyboard(donateType string) tgbotapi.InlineKeyboardMarkup {
-	var buttons []tgbotapi.InlineKeyboardButton
+	var buttons InlineKeyboardButtons
 	for k, v := range Donates {
 		if k == donateType {
 			v.Key = v.Key + "❤️"
 		}
 		buttons = append(buttons, tgbotapi.NewInlineKeyboardButtonData(v.Key, k))
 	}
+	sort.Sort(buttons)
 	return tgbotapi.NewInlineKeyboardMarkup(buttons)
 }
