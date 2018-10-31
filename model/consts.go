@@ -50,11 +50,11 @@ type DonateKV struct {
 var Donates = map[string]DonateKV{
 	CallbackTypeDonateWX: {
 		Key:    "微信",
-		FileID: "AgADBQADI6gxG_OVyVZPEk79HZiSzz9h2zIABA2NBWY3mfZlkOwAAgI",
+		FileID: "AgADBQADI6gxG_OVyVY1F6eMyZVBHj9h2zIABPOXSdRfwOPHkewAAgI",
 	},
 	CallbackTypeDonateAlipay: {
 		Key:    "支付宝",
-		FileID: "AgADBQADIqgxG_OVyVZoTf04FO5TuWhm2zIABBeF-IkG4kvIBucAAgI",
+		FileID: "AgADBQADIqgxG_OVyVZzu89I8nKBKmhm2zIABBeF-IkG4kvIBucAAgI",
 	},
 }
 
