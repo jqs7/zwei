@@ -6,6 +6,7 @@
 1. **部署环境, 点击`Try in PWD`按钮**
 
 [![Try in PWD](https://github.com/play-with-docker/stacks/raw/master/assets/images/button.png)](https://labs.play-with-docker.com/?stack=https://raw.githubusercontent.com/llitfkitfk/zwei/master/stack.yml)
+
 2. **配置好之后, 打开Docker Swarm管理界面**
 ![](images/open.jpg)
 3. **登录Docker Swarm管理界面**
