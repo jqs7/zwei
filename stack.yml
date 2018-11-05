@@ -26,7 +26,6 @@ services:
   
   zwei:
     image: jqs7/zwei
-    restart: always
     environment:
       - ZWEI_ADDRESS=postgres
       - ZWEI_USER=jqs7
@@ -34,7 +33,6 @@ services:
       - ZWEI_TOKEN=<telegram-bot-token>
   postgres:
     image: postgres
-    restart: always
     volumes:
       - postgres-data:/var/lib/postgresql/data
     environment:
