@@ -1,0 +1,41 @@
+version: "3"
+
+volumes:
+  postgres-data:
+  couchdb-data:
+
+services:
+  manager:
+    image: swarmpit/swarmpit:latest
+    environment:
+      SWARMPIT_DB: http://couchdb:5984
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    ports:
+      - 8080:8080
+    depends_on:
+      - couchdb
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+  couchdb:
+    image: klaemo/couchdb:2.0.0
+    volumes:
+      - couchdb-data:/opt/couchdb/data
+  
+  zwei:
+    image: jqs7/zwei
+    environment:
+      - ZWEI_ADDRESS=postgres
+      - ZWEI_USER=jqs7
+      - ZWEI_DATABASE=zwei
+      - ZWEI_TOKEN=<telegram-bot-token>
+  postgres:
+    image: postgres
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=
+      - POSTGRES_USER=jqs7
+      - POSTGRES_DB=zwei
