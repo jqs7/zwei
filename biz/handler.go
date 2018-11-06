@@ -229,6 +229,9 @@ func (h Handler) OnCallbackQuery(bot *tgbotapi.BotAPI, query tgbotapi.CallbackQu
 }
 
 func (h Handler) refresh(bot *tgbotapi.BotAPI, blackList *model.BlackList, query tgbotapi.CallbackQuery) error {
+	if blackList.ExpireAt.Before(time.Now()) {
+		return h.answerCallbackQuery(bot, query, "已过期")
+	}
 	if query.From.ID != blackList.UserId {
 		return h.answerCallbackQuery(bot, query, "无权限")
 	}
