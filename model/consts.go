@@ -10,6 +10,7 @@ import (
 const (
 	CallbackTypeRefresh     = "Refresh"
 	CallbackTypePassThrough = "PassThrough"
+	CallbackTypeKick        = "Kick"
 
 	CallbackTypeDonateWX     = "DonateWX"
 	CallbackTypeDonateAlipay = "DonateAlipay"
@@ -39,6 +40,9 @@ var InlineKeyboard = tgbotapi.NewInlineKeyboardMarkup(
 	[]tgbotapi.InlineKeyboardButton{
 		tgbotapi.NewInlineKeyboardButtonData("刷新", CallbackTypeRefresh),
 		tgbotapi.NewInlineKeyboardButtonData("通过验证[管理员]", CallbackTypePassThrough),
+	},
+	[]tgbotapi.InlineKeyboardButton{
+		tgbotapi.NewInlineKeyboardButtonData("踢出群组[管理员]", CallbackTypeKick),
 	},
 )
 

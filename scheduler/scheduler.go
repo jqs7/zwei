@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-pg/pg"
 	"github.com/go-telegram-bot-api/telegram-bot-api"
+	"github.com/jqs7/zwei/bot/extra"
 	"github.com/jqs7/zwei/model"
 )
 
@@ -79,7 +80,7 @@ func (s Scheduler) updateMsgExpire(task model.Task) error {
 	}
 	timeSub := blackList.ExpireAt.Sub(time.Now()) / time.Second
 	if timeSub <= 0 {
-		s.kickUserAndDelCaptcha(blackList)
+		extra.KickAndDelCaptcha(s.BotAPI, *blackList)
 		return s.taskDone(&task)
 	}
 	if err := s.updateMsg(blackList, timeSub); err != nil {
@@ -103,20 +104,6 @@ func (s Scheduler) taskDelay(task *model.Task, dur time.Duration) error {
 		Set("run_at = ?", time.Now().Add(dur)).
 		Update()
 	return err
-}
-
-func (s Scheduler) kickUserAndDelCaptcha(blackList *model.BlackList) error {
-	s.KickChatMember(tgbotapi.KickChatMemberConfig{
-		ChatMemberConfig: tgbotapi.ChatMemberConfig{
-			ChatID: blackList.GroupId,
-			UserID: blackList.UserId,
-		},
-		UntilDate: time.Now().Add(time.Minute).Unix(),
-	})
-	s.DeleteMessage(tgbotapi.NewDeleteMessage(
-		blackList.GroupId, blackList.CaptchaMsgId,
-	))
-	return nil
 }
 
 func (s Scheduler) updateMsg(blackList *model.BlackList, timeSub time.Duration) error {

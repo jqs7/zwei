@@ -233,6 +233,23 @@ func (h Handler) OnCallbackQuery(bot *tgbotapi.BotAPI, query tgbotapi.CallbackQu
 			return err
 		}
 		return h.passThrough(bot, blackList, query)
+	case model.CallbackTypeKick:
+		blackList := &model.BlackList{}
+		if err := db.Instance().Model(blackList).
+			Where("group_id = ?", query.Message.Chat.ID).
+			Where("captcha_msg_id = ?", query.Message.MessageID).
+			First(); err != nil {
+			return err
+		}
+		_, err := db.Instance().Model(blackList).
+			Where("group_id = ?group_id").
+			Where("user_id = ?user_id").
+			Delete()
+		if err != nil {
+			return err
+		}
+		scheduler.UpdateMsgExpireTaskDone(db.Instance(), blackList.Id)
+		extra.KickAndDelCaptcha(bot, *blackList)
 	case model.CallbackTypeDonateWX, model.CallbackTypeDonateAlipay:
 		if model.Donates[query.Data].FileID != "" {
 			_, err := extra.UpdateMsgPhoto(bot, query.Message.Chat.ID, query.Message.MessageID, query.Message.Caption,

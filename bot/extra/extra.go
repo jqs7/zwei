@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"net/url"
 	"strconv"
+	"time"
 
 	"github.com/go-telegram-bot-api/telegram-bot-api"
+	"github.com/jqs7/zwei/model"
 	"github.com/json-iterator/go"
 )
 
@@ -65,4 +67,15 @@ func UpdateMsgPhoto(
 	message := &tgbotapi.Message{}
 	json.Unmarshal(resp.Result, message)
 	return message, nil
+}
+
+func KickAndDelCaptcha(bot *tgbotapi.BotAPI, blackList model.BlackList) {
+	bot.DeleteMessage(tgbotapi.NewDeleteMessage(blackList.GroupId, blackList.CaptchaMsgId))
+	bot.KickChatMember(tgbotapi.KickChatMemberConfig{
+		ChatMemberConfig: tgbotapi.ChatMemberConfig{
+			ChatID: blackList.GroupId,
+			UserID: blackList.UserId,
+		},
+		UntilDate: time.Now().Add(time.Minute).Unix(),
+	})
 }
