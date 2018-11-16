@@ -234,6 +234,17 @@ func (h Handler) OnCallbackQuery(bot *tgbotapi.BotAPI, query tgbotapi.CallbackQu
 		}
 		return h.passThrough(bot, blackList, query)
 	case model.CallbackTypeKick:
+		member, err := bot.GetChatMember(tgbotapi.ChatConfigWithUser{
+			ChatID:             query.Message.Chat.ChatConfig().ChatID,
+			SuperGroupUsername: query.Message.Chat.ChatConfig().SuperGroupUsername,
+			UserID:             query.From.ID,
+		})
+		if err != nil {
+			return err
+		}
+		if !member.IsCreator() && !member.IsAdministrator() {
+			return h.answerCallbackQuery(bot, query, "无权限")
+		}
 		blackList := &model.BlackList{}
 		if err := db.Instance().Model(blackList).
 			Where("group_id = ?", query.Message.Chat.ID).
@@ -241,7 +252,7 @@ func (h Handler) OnCallbackQuery(bot *tgbotapi.BotAPI, query tgbotapi.CallbackQu
 			First(); err != nil {
 			return err
 		}
-		_, err := db.Instance().Model(blackList).
+		_, err = db.Instance().Model(blackList).
 			Where("group_id = ?group_id").
 			Where("user_id = ?user_id").
 			Delete()
