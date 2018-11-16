@@ -15,13 +15,13 @@ var (
 	once sync.Once
 )
 
-func Instance() *pg.DB {
+func Instance(cfg env.Specification) *pg.DB {
 	once.Do(func() {
 		pgDB = pg.Connect(&pg.Options{
-			Addr:     fmt.Sprintf("%s:%s", env.Spec.Address, env.Spec.Port),
-			User:     env.Spec.User,
-			Password: env.Spec.Password,
-			Database: env.Spec.Database,
+			Addr:     fmt.Sprintf("%s:%s", cfg.Address, cfg.Port),
+			User:     cfg.User,
+			Password: cfg.Password,
+			Database: cfg.Database,
 			OnConnect: func(db *pg.DB) error {
 				log.Println("database is connected")
 				return nil

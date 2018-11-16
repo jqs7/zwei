@@ -13,9 +13,7 @@ import (
 func main() {
 	flag.Parse()
 
-	env.Init()
-
-	oldVer, newVer, err := migrations.Run(db.Instance(), flag.Args()...)
+	oldVer, newVer, err := migrations.Run(db.Instance(env.Init()), flag.Args()...)
 	if err != nil {
 		log.Fatalln(err)
 	}

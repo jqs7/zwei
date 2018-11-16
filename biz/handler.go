@@ -16,20 +16,21 @@ import (
 	"github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/hanguofeng/gocaptcha"
 	"github.com/jqs7/zwei/bot/extra"
-	"github.com/jqs7/zwei/db"
+	"github.com/jqs7/zwei/env"
 	"github.com/jqs7/zwei/model"
 	"github.com/jqs7/zwei/scheduler"
 	"github.com/skip2/go-qrcode"
 )
 
 type Handler struct {
+	*pg.DB
 	*gocaptcha.ImageConfig
 	*gocaptcha.ImageFilterManager
 	IdiomCount int
 }
 
-func NewHandler(noiseNum int) Handler {
-	idiomCount, err := db.Instance().Model(new(model.Idiom)).Count()
+func NewHandler(db *pg.DB, cfg env.Specification) Handler {
+	idiomCount, err := db.Model(new(model.Idiom)).Count()
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -44,7 +45,7 @@ func NewHandler(noiseNum int) Handler {
 	for _, v := range filterConfig.Filters {
 		filterConfigGroup := new(gocaptcha.FilterConfigGroup)
 		filterConfigGroup.Init()
-		filterConfigGroup.SetItem("Num", strconv.Itoa(noiseNum))
+		filterConfigGroup.SetItem("Num", strconv.Itoa(cfg.CaptchaNoise))
 		filterConfig.SetGroup(v, filterConfigGroup)
 	}
 
@@ -54,6 +55,7 @@ func NewHandler(noiseNum int) Handler {
 	}
 	fontPath := filepath.Join(pwd, "fonts")
 	return Handler{
+		DB: db,
 		ImageConfig: &gocaptcha.ImageConfig{
 			Width:    320,
 			Height:   100,
@@ -119,7 +121,7 @@ func (h Handler) NewMemberInGroup(bot *tgbotapi.BotAPI, chat *tgbotapi.Chat, use
 		GroupId: chat.ID,
 		UserId:  user.ID,
 	}
-	err := db.Instance().Insert(blackList)
+	err := h.Insert(blackList)
 	if err != nil {
 		return err
 	}
@@ -133,7 +135,7 @@ func (h Handler) NewMemberInGroup(bot *tgbotapi.BotAPI, chat *tgbotapi.Chat, use
 
 func (h Handler) OnMemberLeftGroup(bot *tgbotapi.BotAPI, chat *tgbotapi.Chat, user tgbotapi.User) error {
 	var blackLists []model.BlackList
-	if err := db.Instance().Model(&blackLists).
+	if err := h.Model(&blackLists).
 		Where("group_id = ?", chat.ID).
 		Where("user_id = ?", user.ID).
 		Select(); err != nil && err != pg.ErrNoRows {
@@ -144,9 +146,9 @@ func (h Handler) OnMemberLeftGroup(bot *tgbotapi.BotAPI, chat *tgbotapi.Chat, us
 	}
 	for _, blackList := range blackLists {
 		bot.DeleteMessage(tgbotapi.NewDeleteMessage(blackList.GroupId, blackList.CaptchaMsgId))
-		scheduler.UpdateMsgExpireTaskDone(db.Instance(), blackList.Id)
+		scheduler.UpdateMsgExpireTaskDone(h.DB, blackList.Id)
 	}
-	_, err := db.Instance().Model(&model.BlackList{}).
+	_, err := h.Model(&model.BlackList{}).
 		Where("group_id = ?", chat.ID).
 		Where("user_id = ?", user.ID).
 		Delete()
@@ -172,7 +174,7 @@ func (h Handler) sendCaptcha(bot *tgbotapi.BotAPI,
 		return err
 	}
 	if err := scheduler.AddUpdateMsgExpireTask(
-		db.Instance(), blackList.Id, chat.ID, photoMsg.MessageID,
+		h.DB, blackList.Id, chat.ID, photoMsg.MessageID,
 	); err != nil {
 		return err
 	}
@@ -180,7 +182,7 @@ func (h Handler) sendCaptcha(bot *tgbotapi.BotAPI,
 	blackList.CaptchaMsgId = photoMsg.MessageID
 	blackList.UserLink = userLink
 	blackList.ExpireAt = time.Now().Add(model.DefaultCaptchaExpire)
-	if _, err := db.Instance().Model(blackList).
+	if _, err := h.Model(blackList).
 		Column("idiom_id", "captcha_msg_id", "user_link", "expire_at").
 		WherePK().Update(); err != nil {
 		return err
@@ -190,7 +192,7 @@ func (h Handler) sendCaptcha(bot *tgbotapi.BotAPI,
 
 func (h Handler) OnGroupMsg(bot *tgbotapi.BotAPI, msg tgbotapi.Message) error {
 	blackList := &model.BlackList{}
-	err := db.Instance().Model(blackList).
+	err := h.Model(blackList).
 		Column("black_list.*", "Idiom").
 		Where("group_id = ?", msg.Chat.ID).
 		Where("user_id = ?", msg.From.ID).
@@ -217,7 +219,7 @@ func (h Handler) OnCallbackQuery(bot *tgbotapi.BotAPI, query tgbotapi.CallbackQu
 	switch query.Data {
 	case model.CallbackTypeRefresh:
 		blackList := &model.BlackList{}
-		if err := db.Instance().Model(blackList).
+		if err := h.Model(blackList).
 			Where("group_id = ?", query.Message.Chat.ID).
 			Where("captcha_msg_id = ?", query.Message.MessageID).
 			First(); err != nil {
@@ -226,7 +228,7 @@ func (h Handler) OnCallbackQuery(bot *tgbotapi.BotAPI, query tgbotapi.CallbackQu
 		return h.refresh(bot, blackList, query)
 	case model.CallbackTypePassThrough:
 		blackList := &model.BlackList{}
-		if err := db.Instance().Model(blackList).
+		if err := h.Model(blackList).
 			Where("group_id = ?", query.Message.Chat.ID).
 			Where("captcha_msg_id = ?", query.Message.MessageID).
 			First(); err != nil {
@@ -246,20 +248,20 @@ func (h Handler) OnCallbackQuery(bot *tgbotapi.BotAPI, query tgbotapi.CallbackQu
 			return h.answerCallbackQuery(bot, query, "无权限")
 		}
 		blackList := &model.BlackList{}
-		if err := db.Instance().Model(blackList).
+		if err := h.Model(blackList).
 			Where("group_id = ?", query.Message.Chat.ID).
 			Where("captcha_msg_id = ?", query.Message.MessageID).
 			First(); err != nil {
 			return err
 		}
-		_, err = db.Instance().Model(blackList).
+		_, err = h.Model(blackList).
 			Where("group_id = ?group_id").
 			Where("user_id = ?user_id").
 			Delete()
 		if err != nil {
 			return err
 		}
-		scheduler.UpdateMsgExpireTaskDone(db.Instance(), blackList.Id)
+		scheduler.UpdateMsgExpireTaskDone(h.DB, blackList.Id)
 		extra.KickAndDelCaptcha(bot, *blackList)
 	case model.CallbackTypeDonateWX, model.CallbackTypeDonateAlipay:
 		if model.Donates[query.Data].FileID != "" {
@@ -301,7 +303,7 @@ func (h Handler) refresh(bot *tgbotapi.BotAPI, blackList *model.BlackList, query
 		return err
 	}
 	blackList.IdiomId = idiom.Id
-	if _, err := db.Instance().Model(blackList).
+	if _, err := h.Model(blackList).
 		Column("idiom_id").
 		WherePK().Update(); err != nil {
 		h.answerCallbackQuery(bot, query, "刷新失败")
@@ -343,7 +345,7 @@ func (h Handler) passThrough(bot *tgbotapi.BotAPI, blackList *model.BlackList, q
 }
 
 func (h Handler) validateOK(bot *tgbotapi.BotAPI, blackList *model.BlackList) error {
-	_, err := db.Instance().Model(blackList).
+	_, err := h.Model(blackList).
 		Where("group_id = ?group_id").
 		Where("user_id = ?user_id").
 		Delete()
@@ -358,15 +360,15 @@ func (h Handler) validateOK(bot *tgbotapi.BotAPI, blackList *model.BlackList) er
 	if err != nil {
 		return err
 	}
-	scheduler.UpdateMsgExpireTaskDone(db.Instance(), blackList.Id)
-	return scheduler.AddDelMsgTask(db.Instance(), blackList.GroupId, passMsg.MessageID)
+	scheduler.UpdateMsgExpireTaskDone(h.DB, blackList.Id)
+	return scheduler.AddDelMsgTask(h.DB, blackList.GroupId, passMsg.MessageID)
 }
 
 func (h Handler) GetRandomIdiom() (*model.Idiom, error) {
 	idiom := &model.Idiom{}
 	rand.Seed(time.Now().UnixNano())
 	randOffset := rand.Intn(h.IdiomCount)
-	if err := db.Instance().Model(idiom).
+	if err := h.Model(idiom).
 		Offset(randOffset).Limit(1).Select(); err != nil {
 		return nil, err
 	}
