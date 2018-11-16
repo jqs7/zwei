@@ -1,6 +1,7 @@
 package extra
 
 import (
+	"encoding/json"
 	"net/url"
 	"strconv"
 
@@ -12,7 +13,7 @@ func UpdateMsgPhoto(
 	bot *tgbotapi.BotAPI, chatID int64, messageID int,
 	caption, parseMode string,
 	markup tgbotapi.InlineKeyboardMarkup, file interface{},
-) error {
+) (*tgbotapi.Message, error) {
 	media := "attach://photo"
 	fileID, withFileID := file.(string)
 	if withFileID {
@@ -30,11 +31,11 @@ func UpdateMsgPhoto(
 		ParseMode: parseMode,
 	})
 	if err != nil {
-		return err
+		return nil, err
 	}
 	replyMarkup, err := jsoniter.MarshalToString(markup)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	reqParam := map[string]string{
@@ -49,9 +50,19 @@ func UpdateMsgPhoto(
 		for k, v := range reqParam {
 			values.Set(k, v)
 		}
-		_, err := bot.MakeRequest("editMessageMedia", values)
-		return err
+		resp, err := bot.MakeRequest("editMessageMedia", values)
+		if err != nil {
+			return nil, err
+		}
+		message := &tgbotapi.Message{}
+		json.Unmarshal(resp.Result, message)
+		return message, nil
 	}
-	_, err = bot.UploadFile("editMessageMedia", reqParam, "photo", file)
-	return err
+	resp, err := bot.UploadFile("editMessageMedia", reqParam, "photo", file)
+	if err != nil {
+		return nil, err
+	}
+	message := &tgbotapi.Message{}
+	json.Unmarshal(resp.Result, message)
+	return message, nil
 }

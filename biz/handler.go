@@ -19,6 +19,7 @@ import (
 	"github.com/jqs7/zwei/db"
 	"github.com/jqs7/zwei/model"
 	"github.com/jqs7/zwei/scheduler"
+	"github.com/skip2/go-qrcode"
 )
 
 type Handler struct {
@@ -83,10 +84,25 @@ func (h Handler) OnPrivateCommand(bot *tgbotapi.BotAPI, msg tgbotapi.Message, co
 }
 
 func (h Handler) sendDonate(bot *tgbotapi.BotAPI, chatID int64, donateType string) error {
-	donateImg := tgbotapi.NewPhotoShare(chatID, model.Donates[donateType].FileID)
+	var donateImg tgbotapi.PhotoConfig
+	if model.Donates[donateType].FileID != "" {
+		donateImg = tgbotapi.NewPhotoShare(chatID, model.Donates[donateType].FileID)
+	} else {
+		b, err := qrcode.Encode(model.Donates[donateType].URL, qrcode.Medium, 256)
+		if err != nil {
+			return err
+		}
+		donateImg = tgbotapi.NewPhotoUpload(chatID, tgbotapi.FileBytes{Name: "file", Bytes: b})
+	}
 	donateImg.ReplyMarkup = model.DonatesKeyboard(donateType)
 	donateImg.Caption = model.DonateMsg
-	_, err := bot.Send(donateImg)
+	msg, err := bot.Send(donateImg)
+	if err != nil {
+		return err
+	}
+	donate := model.Donates[donateType]
+	donate.FileID = (*msg.Photo)[len(*msg.Photo)-1].FileID
+	model.Donates[donateType] = donate
 	return err
 }
 
@@ -218,9 +234,25 @@ func (h Handler) OnCallbackQuery(bot *tgbotapi.BotAPI, query tgbotapi.CallbackQu
 		}
 		return h.passThrough(bot, blackList, query)
 	case model.CallbackTypeDonateWX, model.CallbackTypeDonateAlipay:
-		if err := extra.UpdateMsgPhoto(bot, query.Message.Chat.ID, query.Message.MessageID, query.Message.Caption,
-			"", model.DonatesKeyboard(query.Data), model.Donates[query.Data].FileID); err != nil {
-			return err
+		if model.Donates[query.Data].FileID != "" {
+			_, err := extra.UpdateMsgPhoto(bot, query.Message.Chat.ID, query.Message.MessageID, query.Message.Caption,
+				"", model.DonatesKeyboard(query.Data), model.Donates[query.Data].FileID)
+			if err != nil {
+				return err
+			}
+		} else {
+			b, err := qrcode.Encode(model.Donates[query.Data].URL, qrcode.Medium, 256)
+			if err != nil {
+				return err
+			}
+			msg, err := extra.UpdateMsgPhoto(bot, query.Message.Chat.ID, query.Message.MessageID, query.Message.Caption,
+				"", model.DonatesKeyboard(query.Data), tgbotapi.FileBytes{Name: "file", Bytes: b})
+			if err != nil {
+				return err
+			}
+			donate := model.Donates[query.Data]
+			donate.FileID = (*msg.Photo)[len(*msg.Photo)-1].FileID
+			model.Donates[query.Data] = donate
 		}
 		_, err := bot.AnswerCallbackQuery(tgbotapi.NewCallback(query.ID, ""))
 		return err
@@ -247,7 +279,7 @@ func (h Handler) refresh(bot *tgbotapi.BotAPI, blackList *model.BlackList, query
 		h.answerCallbackQuery(bot, query, "刷新失败")
 		return err
 	}
-	if err := extra.UpdateMsgPhoto(
+	if _, err := extra.UpdateMsgPhoto(
 		bot, query.Message.Chat.ID, query.Message.MessageID,
 		fmt.Sprintf(model.EnterRoomMsg, blackList.UserLink, query.Message.Chat.Title,
 			time.Until(blackList.ExpireAt)/time.Second),

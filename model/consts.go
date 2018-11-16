@@ -45,16 +45,17 @@ var InlineKeyboard = tgbotapi.NewInlineKeyboardMarkup(
 type DonateKV struct {
 	Key    string
 	FileID string
+	URL    string
 }
 
 var Donates = map[string]DonateKV{
 	CallbackTypeDonateWX: {
-		Key:    "微信",
-		FileID: "AgADBQADI6gxG_OVyVY1F6eMyZVBHj9h2zIABPOXSdRfwOPHkewAAgI",
+		Key: "微信",
+		URL: "wxp://f2f0OWfabxt-G2eVGJuF9psyiEvqiL3u3gxB",
 	},
 	CallbackTypeDonateAlipay: {
-		Key:    "支付宝",
-		FileID: "AgADBQADIqgxG_OVyVZzu89I8nKBKmhm2zIABBeF-IkG4kvIBucAAgI",
+		Key: "支付宝",
+		URL: "https://qr.alipay.com/fkx00824kg0dc3tf1sf4c2e",
 	},
 }
 
