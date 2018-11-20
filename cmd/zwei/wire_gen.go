@@ -8,7 +8,6 @@ package main
 import (
 	"context"
 	"github.com/jqs7/zwei/biz"
-	"github.com/jqs7/zwei/db"
 	"github.com/jqs7/zwei/env"
 	"sync"
 )
@@ -17,9 +16,9 @@ import (
 
 func Run(ctx context.Context, cancel context.CancelFunc) *sync.WaitGroup {
 	specification := env.Init()
-	pgDB := db.Instance(specification)
-	handler := biz.NewHandler(pgDB, specification)
+	db := ProvideDB(specification)
+	handler := biz.NewHandler(db, specification)
 	bot := ProvideBot(specification, handler)
-	waitGroup := Runner(ctx, cancel, pgDB, bot)
+	waitGroup := Runner(ctx, cancel, db, bot)
 	return waitGroup
 }
