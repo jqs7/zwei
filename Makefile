@@ -26,12 +26,12 @@ migration: ## migration
 
 .PHONY: build
 build: ## build
-	go build -o $(APP_BINARY) -v $(APP_CMD_DIR)/main.go
+	go build -o $(APP_BINARY) -v $(APP_CMD_DIR)/main.go $(APP_CMD_DIR)/provider.go $(APP_CMD_DIR)/wire_gen.go
 	go build -o bin/migrate -v cmd/migrate/*.go
 
 .PHONY: install
 install: ## install
-	go install $(APP_CMD_DIR)/main.go
+	go install $(APP_CMD_DIR)/*.go
 
 .PHONY: clean
 clean: ## clean 
@@ -45,7 +45,7 @@ run: build ## run
 
 .PHONY: build-linux
 build-linux: ## build linux
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o $(APP_BINARY_UNIX) -v $(APP_CMD_DIR)/main.go
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o $(APP_BINARY_UNIX) -v $(APP_CMD_DIR)/main.go $(APP_CMD_DIR)/provider.go $(APP_CMD_DIR)/wire_gen.go
 
 
 .PHONY: help
