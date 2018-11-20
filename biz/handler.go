@@ -1,8 +1,6 @@
 package biz
 
 import (
-	"github.com/go-pg/pg"
-	"github.com/jqs7/zwei/db"
 	"bytes"
 	"fmt"
 	"image/png"
@@ -14,9 +12,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-pg/pg"
 	"github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/hanguofeng/gocaptcha"
 	"github.com/jqs7/zwei/bot/extra"
+	"github.com/jqs7/zwei/db"
 	"github.com/jqs7/zwei/env"
 	"github.com/jqs7/zwei/model"
 	"github.com/jqs7/zwei/scheduler"
