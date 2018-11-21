@@ -5,7 +5,7 @@ require (
 	github.com/go-pg/migrations v6.3.0+incompatible
 	github.com/go-pg/pg v6.15.1+incompatible
 	github.com/go-telegram-bot-api/telegram-bot-api v4.6.4+incompatible
-	github.com/google/go-cloud v0.4.0
+	github.com/google/go-cloud v0.5.0
 	github.com/hanguofeng/gocaptcha v1.0.7
 	github.com/jinzhu/inflection v0.0.0-20180308033659-04140366298a // indirect
 	github.com/json-iterator/go v1.1.5
