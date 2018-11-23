@@ -38,7 +38,7 @@ const (
 
 var InlineKeyboard = tgbotapi.NewInlineKeyboardMarkup(
 	[]tgbotapi.InlineKeyboardButton{
-		tgbotapi.NewInlineKeyboardButtonData("刷新", CallbackTypeRefresh),
+		tgbotapi.NewInlineKeyboardButtonData("刷新验证码", CallbackTypeRefresh),
 		tgbotapi.NewInlineKeyboardButtonData("通过验证[管理员]", CallbackTypePassThrough),
 	},
 	[]tgbotapi.InlineKeyboardButton{
