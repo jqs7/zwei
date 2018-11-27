@@ -42,6 +42,8 @@ github.com/golang/protobuf v1.2.0/go.mod h1:6lQm79b+lXiMfvg/cZm0SGofjICqVBUtrP5y
 github.com/google/btree v0.0.0-20180813153112-4030bb1f1f0c/go.mod h1:lNA+9X1NB3Zf8V7Ke586lFgjr2dZNuvo3lPJSGZ5JPQ=
 github.com/google/go-cloud v0.5.0 h1:erqEI/rnysfgsp4k68LWhqc61j4gQ621k9uqM/nZW9M=
 github.com/google/go-cloud v0.5.0/go.mod h1:Utk23YEBseJBsWGerZgyzetzhHIRNcUTmTFQEvh1dUw=
+github.com/google/go-cloud v0.6.0 h1:O4LkMS/B4m+KzJKzFoaJN3IfHSAAksqTm9cXs3G3lVE=
+github.com/google/go-cloud v0.6.0/go.mod h1:Utk23YEBseJBsWGerZgyzetzhHIRNcUTmTFQEvh1dUw=
 github.com/google/go-cmp v0.2.0/go.mod h1:oXzfMopK8JAjlY9xF4vHSVASa0yLyX7SntLO5aqRK0M=
 github.com/google/martian v2.1.0+incompatible/go.mod h1:9I4somxYTbIHy5NJKHRl3wXiIaQGbYVAs8BPL6v8lEs=
 github.com/googleapis/gax-go v2.0.0+incompatible/go.mod h1:SFVmujtThgffbyetf+mdk2eWhX2bMyUtNHzFKcPA9HY=
