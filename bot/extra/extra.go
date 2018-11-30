@@ -8,7 +8,6 @@ import (
 
 	"github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/jqs7/zwei/model"
-	"github.com/json-iterator/go"
 )
 
 func UpdateMsgPhoto(
@@ -21,7 +20,7 @@ func UpdateMsgPhoto(
 	if withFileID {
 		media = fileID
 	}
-	media, err := jsoniter.MarshalToString(struct {
+	mediaReq, err := json.Marshal(struct {
 		Type      string `json:"type"`
 		Media     string `json:"media"`
 		Caption   string `json:"caption"`
@@ -35,7 +34,7 @@ func UpdateMsgPhoto(
 	if err != nil {
 		return nil, err
 	}
-	replyMarkup, err := jsoniter.MarshalToString(markup)
+	replyMarkup, err := json.Marshal(markup)
 	if err != nil {
 		return nil, err
 	}
@@ -43,8 +42,8 @@ func UpdateMsgPhoto(
 	reqParam := map[string]string{
 		"chat_id":      strconv.FormatInt(chatID, 10),
 		"message_id":   strconv.Itoa(messageID),
-		"media":        media,
-		"reply_markup": replyMarkup,
+		"media":        string(mediaReq),
+		"reply_markup": string(replyMarkup),
 	}
 
 	if withFileID {
@@ -57,16 +56,14 @@ func UpdateMsgPhoto(
 			return nil, err
 		}
 		message := &tgbotapi.Message{}
-		json.Unmarshal(resp.Result, message)
-		return message, nil
+		return message, json.Unmarshal(resp.Result, message)
 	}
 	resp, err := bot.UploadFile("editMessageMedia", reqParam, "photo", file)
 	if err != nil {
 		return nil, err
 	}
 	message := &tgbotapi.Message{}
-	json.Unmarshal(resp.Result, message)
-	return message, nil
+	return message, json.Unmarshal(resp.Result, message)
 }
 
 func KickAndDelCaptcha(bot *tgbotapi.BotAPI, blackList model.BlackList) {

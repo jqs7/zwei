@@ -6,7 +6,7 @@ import (
 	"context"
 	"sync"
 
-	"github.com/google/go-cloud/wire"
+	"github.com/google/wire"
 	"github.com/jqs7/zwei/biz"
 	"github.com/jqs7/zwei/db"
 	"github.com/jqs7/zwei/env"

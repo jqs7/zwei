@@ -1,13 +1,11 @@
 package main
 
 import (
+	"encoding/json"
 	"os"
 
-	"github.com/go-pg/pg/orm"
-
-	"github.com/json-iterator/go"
-
 	"github.com/go-pg/migrations"
+	"github.com/go-pg/pg/orm"
 )
 
 type Idiom struct {
@@ -21,7 +19,7 @@ type Idiom struct {
 }
 
 func init() {
-	migrations.Register(func(db migrations.DB) error {
+	_ = migrations.Register(func(db migrations.DB) error {
 		if err := db.Model(new(Idiom)).CreateTable(&orm.CreateTableOptions{
 			IfNotExists: true,
 		}); err != nil {
@@ -32,7 +30,7 @@ func init() {
 			return err
 		}
 		var idioms []Idiom
-		if err := jsoniter.NewDecoder(f).Decode(&idioms); err != nil {
+		if err := json.NewDecoder(f).Decode(&idioms); err != nil {
 			return err
 		}
 		for i := range idioms {
