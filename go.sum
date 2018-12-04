@@ -13,6 +13,8 @@ github.com/golang/protobuf v1.2.0/go.mod h1:6lQm79b+lXiMfvg/cZm0SGofjICqVBUtrP5y
 github.com/google/go-cmp v0.2.0/go.mod h1:oXzfMopK8JAjlY9xF4vHSVASa0yLyX7SntLO5aqRK0M=
 github.com/google/wire v0.1.0 h1:PFFNZLhKJLKe9DHooJzYCxZogNJDIYuB8KfmJmsi/Mk=
 github.com/google/wire v0.1.0/go.mod h1:ptBl5bWD3nzmJHVNwYHV3v4wdtKzBMlU2YbtKQCG9GI=
+github.com/google/wire v0.2.0 h1:l8O+yxT6Kx49nR2KzotgPOQpHFcIvpDY0rGzlCZ1wIE=
+github.com/google/wire v0.2.0/go.mod h1:ptBl5bWD3nzmJHVNwYHV3v4wdtKzBMlU2YbtKQCG9GI=
 github.com/hanguofeng/config v1.0.0 h1:AIpXdv7iEzK4v4Qyov7jeZWIwepiwBfELzfpd2r0dH0=
 github.com/hanguofeng/config v1.0.0/go.mod h1:YX//r7JfVHJCHW/+HP8WqQ2FVDaUGCo0j5z3ddMnrk4=
 github.com/hanguofeng/freetype-go-mirror v0.0.0-20140928112427-cfb10e2cb6de h1:M3YJvI5Soj9Py89DgrOLs98V/ToPCnryF4x2AhzwnJE=
