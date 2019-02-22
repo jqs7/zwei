@@ -1,7 +1,7 @@
 module github.com/jqs7/zwei
 
 require (
-	github.com/go-pg/migrations v6.3.0+incompatible
+	github.com/go-pg/migrations v6.7.1+incompatible
 	github.com/go-pg/pg v6.15.1+incompatible
 	github.com/go-telegram-bot-api/telegram-bot-api v4.6.4+incompatible
 	github.com/google/wire v0.2.0
