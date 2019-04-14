@@ -5,6 +5,7 @@ import (
 
 	"github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/jqs7/zwei/biz"
+	"github.com/jqs7/zwei/internal"
 )
 
 type Bot struct {
@@ -46,7 +47,7 @@ func (b Bot) onMessage(msg tgbotapi.Message) error {
 }
 
 func (b Bot) onNewChatMembers(msg tgbotapi.Message) error {
-	b.DeleteMessage(tgbotapi.NewDeleteMessage(msg.Chat.ID, msg.MessageID))
+	internal.JustLogErr(b.DeleteMessage(tgbotapi.NewDeleteMessage(msg.Chat.ID, msg.MessageID)))
 	for _, v := range *msg.NewChatMembers {
 		if v.ID == b.myInfo.ID {
 			return b.BotEnterGroup(b.BotAPI, msg.Chat)
@@ -62,6 +63,6 @@ func (b Bot) onNewChatMembers(msg tgbotapi.Message) error {
 }
 
 func (b Bot) onLeftChatMember(msg tgbotapi.Message) error {
-	b.DeleteMessage(tgbotapi.NewDeleteMessage(msg.Chat.ID, msg.MessageID))
+	internal.JustLogErr(b.DeleteMessage(tgbotapi.NewDeleteMessage(msg.Chat.ID, msg.MessageID)))
 	return b.OnMemberLeftGroup(b.BotAPI, msg.Chat, *msg.LeftChatMember)
 }

@@ -17,6 +17,7 @@ import (
 	"github.com/hanguofeng/gocaptcha"
 	"github.com/jqs7/zwei/bot/extra"
 	"github.com/jqs7/zwei/env"
+	"github.com/jqs7/zwei/internal"
 	"github.com/jqs7/zwei/model"
 	"github.com/jqs7/zwei/scheduler"
 	"github.com/skip2/go-qrcode"
@@ -145,8 +146,8 @@ func (h Handler) OnMemberLeftGroup(bot *tgbotapi.BotAPI, chat *tgbotapi.Chat, us
 		return nil
 	}
 	for _, blackList := range blackLists {
-		bot.DeleteMessage(tgbotapi.NewDeleteMessage(blackList.GroupId, blackList.CaptchaMsgId))
-		scheduler.UpdateMsgExpireTaskDone(h.DB, blackList.Id)
+		internal.JustLogErr(bot.DeleteMessage(tgbotapi.NewDeleteMessage(blackList.GroupId, blackList.CaptchaMsgId)))
+		internal.JustLogErr(scheduler.UpdateMsgExpireTaskDone(h.DB, blackList.Id))
 	}
 	_, err := h.Model(&model.BlackList{}).
 		Where("group_id = ?", chat.ID).
@@ -203,7 +204,7 @@ func (h Handler) OnGroupMsg(bot *tgbotapi.BotAPI, msg tgbotapi.Message) error {
 	if err != nil {
 		return err
 	}
-	h.deleteMsg(bot, msg.Chat.ID, msg.MessageID)
+	internal.JustLogErr(h.deleteMsg(bot, msg.Chat.ID, msg.MessageID))
 	if msg.Text != blackList.Idiom.Word {
 		return nil
 	}
@@ -261,8 +262,8 @@ func (h Handler) OnCallbackQuery(bot *tgbotapi.BotAPI, query tgbotapi.CallbackQu
 		if err != nil {
 			return err
 		}
-		scheduler.UpdateMsgExpireTaskDone(h.DB, blackList.Id)
-		extra.KickAndDelCaptcha(bot, *blackList)
+		internal.JustLogErr(scheduler.UpdateMsgExpireTaskDone(h.DB, blackList.Id))
+		extra.KickAndDelCaptcha(bot, *blackList, 0)
 	case model.CallbackTypeDonateWX, model.CallbackTypeDonateAlipay:
 		if model.Donates[query.Data].FileID != "" {
 			_, err := extra.UpdateMsgPhoto(bot, query.Message.Chat.ID, query.Message.MessageID, query.Message.Caption,
@@ -299,14 +300,14 @@ func (h Handler) refresh(bot *tgbotapi.BotAPI, blackList *model.BlackList, query
 	}
 	idiom, err := h.GetRandomIdiom()
 	if err != nil {
-		h.answerCallbackQuery(bot, query, "刷新失败")
+		internal.JustLogErr(h.answerCallbackQuery(bot, query, "刷新失败"))
 		return err
 	}
 	blackList.IdiomId = idiom.Id
 	if _, err := h.Model(blackList).
 		Column("idiom_id").
 		WherePK().Update(); err != nil {
-		h.answerCallbackQuery(bot, query, "刷新失败")
+		internal.JustLogErr(h.answerCallbackQuery(bot, query, "刷新失败"))
 		return err
 	}
 	if _, err := extra.UpdateMsgPhoto(
@@ -318,7 +319,7 @@ func (h Handler) refresh(bot *tgbotapi.BotAPI, blackList *model.BlackList, query
 			Bytes: idiom.CaptchaImg,
 		},
 	); err != nil {
-		h.answerCallbackQuery(bot, query, "刷新失败")
+		internal.JustLogErr(h.answerCallbackQuery(bot, query, "刷新失败"))
 		return err
 	}
 	return h.answerCallbackQuery(bot, query, "刷新成功")
@@ -352,15 +353,16 @@ func (h Handler) validateOK(bot *tgbotapi.BotAPI, blackList *model.BlackList) er
 	if err != nil {
 		return err
 	}
-	bot.DeleteMessage(tgbotapi.NewDeleteMessage(blackList.GroupId, blackList.CaptchaMsgId))
+	internal.JustLogErr(bot.DeleteMessage(tgbotapi.NewDeleteMessage(blackList.GroupId, blackList.CaptchaMsgId)))
 	passMsgConfig := tgbotapi.NewMessage(blackList.GroupId, fmt.Sprintf(
 		"%s 恭喜，你已验证通过", blackList.UserLink))
+	passMsgConfig.DisableNotification = true
 	passMsgConfig.ParseMode = tgbotapi.ModeMarkdown
 	passMsg, err := bot.Send(passMsgConfig)
 	if err != nil {
 		return err
 	}
-	scheduler.UpdateMsgExpireTaskDone(h.DB, blackList.Id)
+	internal.JustLogErr(scheduler.UpdateMsgExpireTaskDone(h.DB, blackList.Id))
 	return scheduler.AddDelMsgTask(h.DB, blackList.GroupId, passMsg.MessageID)
 }
 

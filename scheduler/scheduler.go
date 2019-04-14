@@ -49,7 +49,6 @@ func (s Scheduler) Run(ctx context.Context) error {
 			return nil
 		}
 	}
-	return nil
 }
 
 func (s Scheduler) processTask(task model.Task) error {
@@ -80,7 +79,7 @@ func (s Scheduler) updateMsgExpire(task model.Task) error {
 	}
 	timeSub := blackList.ExpireAt.Sub(time.Now()) / time.Second
 	if timeSub <= 0 {
-		extra.KickAndDelCaptcha(s.BotAPI, *blackList)
+		extra.KickAndDelCaptcha(s.BotAPI, *blackList, time.Now().Add(time.Minute).Unix())
 		return s.taskDone(&task)
 	}
 	if err := s.updateMsg(blackList, timeSub); err != nil {
