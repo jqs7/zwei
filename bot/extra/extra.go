@@ -68,6 +68,13 @@ func UpdateMsgPhoto(
 
 func KickAndDelCaptcha(bot *tgbotapi.BotAPI, blackList model.BlackList, banUntil int64) {
 	internal.JustLogErr(bot.DeleteMessage(tgbotapi.NewDeleteMessage(blackList.GroupId, blackList.CaptchaMsgId)))
+	member, err := bot.GetChatMember(tgbotapi.ChatConfigWithUser{
+		ChatID: blackList.GroupId,
+		UserID: blackList.UserId,
+	})
+	if err == nil && (member.HasLeft() || member.WasKicked()) {
+		return
+	}
 	internal.JustLogErr(bot.KickChatMember(tgbotapi.KickChatMemberConfig{
 		ChatMemberConfig: tgbotapi.ChatMemberConfig{
 			ChatID: blackList.GroupId,
