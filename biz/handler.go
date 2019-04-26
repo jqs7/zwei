@@ -3,6 +3,7 @@ package biz
 import (
 	"bytes"
 	"fmt"
+	"html"
 	"image/png"
 	"log"
 	"math/rand"
@@ -165,9 +166,9 @@ func (h Handler) sendCaptcha(bot *tgbotapi.BotAPI,
 		Bytes: idiom.CaptchaImg,
 	})
 	fullName := getFullName(user.FirstName, user.LastName)
-	userLink := fmt.Sprintf(model.UserLinkTemplate, fullName, user.ID)
+	userLink := fmt.Sprintf(model.UserLinkTemplate, user.ID, html.EscapeString(fullName))
 	captchaMsg.Caption = fmt.Sprintf(model.EnterRoomMsg, userLink, chat.Title, model.DefaultCaptchaExpire/time.Second)
-	captchaMsg.ParseMode = tgbotapi.ModeMarkdown
+	captchaMsg.ParseMode = tgbotapi.ModeHTML
 	captchaMsg.ReplyMarkup = model.InlineKeyboard
 	captchaMsg.DisableNotification = true
 	photoMsg, err := bot.Send(captchaMsg)
@@ -314,7 +315,7 @@ func (h Handler) refresh(bot *tgbotapi.BotAPI, blackList *model.BlackList, query
 		bot, query.Message.Chat.ID, query.Message.MessageID,
 		fmt.Sprintf(model.EnterRoomMsg, blackList.UserLink, query.Message.Chat.Title,
 			time.Until(blackList.ExpireAt)/time.Second),
-		tgbotapi.ModeMarkdown, model.InlineKeyboard, tgbotapi.FileBytes{
+		tgbotapi.ModeHTML, model.InlineKeyboard, tgbotapi.FileBytes{
 			Name:  strconv.Itoa(query.From.ID),
 			Bytes: idiom.CaptchaImg,
 		},

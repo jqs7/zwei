@@ -113,7 +113,7 @@ func (s Scheduler) updateMsg(blackList *model.BlackList, timeSub time.Duration) 
 	caption := fmt.Sprintf(model.EnterRoomMsg, blackList.UserLink, chat.Title, timeSub)
 	editor := tgbotapi.NewEditMessageCaption(blackList.GroupId, blackList.CaptchaMsgId, caption)
 	editor.ReplyMarkup = &model.InlineKeyboard
-	editor.ParseMode = tgbotapi.ModeMarkdown
+	editor.ParseMode = tgbotapi.ModeHTML
 	_, err = s.Send(editor)
 	return err
 }
