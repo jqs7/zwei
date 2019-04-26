@@ -358,7 +358,7 @@ func (h Handler) validateOK(bot *tgbotapi.BotAPI, blackList *model.BlackList) er
 	passMsgConfig := tgbotapi.NewMessage(blackList.GroupId, fmt.Sprintf(
 		"%s 恭喜，你已验证通过", blackList.UserLink))
 	passMsgConfig.DisableNotification = true
-	passMsgConfig.ParseMode = tgbotapi.ModeMarkdown
+	passMsgConfig.ParseMode = tgbotapi.ModeHTML
 	passMsg, err := bot.Send(passMsgConfig)
 	if err != nil {
 		return err
