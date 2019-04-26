@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"html"
 	"regexp"
 	"time"
 
@@ -34,7 +35,7 @@ func init() {
 			}
 			db.Model(&bl).WherePK().Set(
 				"user_link = ?",
-				fmt.Sprintf(`<a href="tg://user?id=%s">%s</a>`, matches[2], matches[1]),
+				fmt.Sprintf(`<a href="tg://user?id=%s">%s</a>`, matches[2], html.EscapeString(matches[1])),
 			).Update()
 		}
 		return nil
