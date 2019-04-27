@@ -12,8 +12,8 @@ import (
 
 func main() {
 	flag.Parse()
-
-	oldVer, newVer, err := migrations.Run(db.Instance(env.Init()), flag.Args()...)
+	db := db.Instance(db.WithEnv(env.Init()))
+	oldVer, newVer, err := migrations.Run(db.PgDB, flag.Args()...)
 	if err != nil {
 		log.Fatalln(err)
 	}

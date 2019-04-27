@@ -1,32 +1,31 @@
 package db
 
 import (
-	"fmt"
 	"log"
 	"sync"
 	"time"
 
 	"github.com/go-pg/pg"
-	"github.com/jqs7/zwei/env"
 )
 
 var (
-	pgDB *pg.DB
+	db   *DB
 	once sync.Once
 )
 
-func Instance(cfg env.Specification) *pg.DB {
+type DB struct {
+	PgDB *pg.DB
+}
+
+type OptionFunc func(*pg.Options)
+
+func Instance(opts ...OptionFunc) *DB {
 	once.Do(func() {
-		pgDB = pg.Connect(&pg.Options{
-			Addr:     fmt.Sprintf("%s:%s", cfg.Address, cfg.Port),
-			User:     cfg.User,
-			Password: cfg.Password,
-			Database: cfg.Database,
-			OnConnect: func(db *pg.DB) error {
-				log.Println("database is connected")
-				return nil
-			},
-		})
+		pgOpt := new(pg.Options)
+		for _, opt := range opts {
+			opt(pgOpt)
+		}
+		pgDB := pg.Connect(pgOpt)
 		pgDB.OnQueryProcessed(func(event *pg.QueryProcessedEvent) {
 			query, err := event.FormattedQuery()
 			if err != nil {
@@ -34,6 +33,7 @@ func Instance(cfg env.Specification) *pg.DB {
 			}
 			log.Printf("%s %s", time.Since(event.StartTime), query)
 		})
+		db = &DB{PgDB: pgDB}
 	})
-	return pgDB
+	return db
 }
