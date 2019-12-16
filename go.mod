@@ -4,7 +4,7 @@ require (
 	github.com/go-pg/migrations v6.3.0+incompatible
 	github.com/go-pg/pg v6.15.1+incompatible
 	github.com/go-telegram-bot-api/telegram-bot-api v4.6.4+incompatible
-	github.com/google/wire v0.2.1
+	github.com/google/wire v0.4.0
 	github.com/hanguofeng/gocaptcha v1.0.7
 	github.com/jinzhu/inflection v0.0.0-20180308033659-04140366298a // indirect
 	github.com/kelseyhightower/envconfig v1.3.0
