@@ -8,14 +8,13 @@ import (
 
 	"github.com/google/wire"
 	"github.com/jqs7/zwei/biz"
-	"github.com/jqs7/zwei/db"
 	"github.com/jqs7/zwei/env"
 )
 
 func Run(ctx context.Context, cancel context.CancelFunc) *sync.WaitGroup {
 	wire.Build(
 		env.Init,
-		db.Instance,
+		ProvideDB,
 		biz.NewHandler,
 		ProvideBot,
 		Runner,

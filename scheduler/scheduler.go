@@ -5,19 +5,20 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/go-pg/pg"
+	"github.com/jqs7/zwei/db"
+
 	"github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/jqs7/zwei/bot/extra"
 	"github.com/jqs7/zwei/model"
 )
 
 type Scheduler struct {
-	*pg.DB
+	*db.DB
 	*tgbotapi.BotAPI
 }
 
-func New(db *pg.DB, bot *tgbotapi.BotAPI) *Scheduler {
-	db.Model(&model.Task{}).
+func New(db *db.DB, bot *tgbotapi.BotAPI) *Scheduler {
+	db.PgDB.Model(&model.Task{}).
 		Where("status = ?", model.TaskStatusDoing).
 		Set("status = ?", model.TaskStatusPlan).
 		Update()
@@ -34,7 +35,7 @@ func (s Scheduler) Run(ctx context.Context) error {
 		select {
 		case <-ticker.C:
 			var tasks []model.Task
-			err := s.Model(&model.Task{}).
+			err := s.PgDB.Model(&model.Task{}).
 				Where("status = ?", model.TaskStatusPlan).
 				Where("run_at <= ?", time.Now()).
 				Limit(10).
@@ -52,7 +53,7 @@ func (s Scheduler) Run(ctx context.Context) error {
 }
 
 func (s Scheduler) processTask(task model.Task) error {
-	_, err := s.Model(&task).WherePK().
+	_, err := s.PgDB.Model(&task).WherePK().
 		Set("status = ?", model.TaskStatusDoing).
 		Update()
 	if err != nil {
@@ -61,7 +62,7 @@ func (s Scheduler) processTask(task model.Task) error {
 	switch task.Type {
 	case model.TaskTypeDeleteMsg:
 		s.DeleteMessage(tgbotapi.NewDeleteMessage(task.ChatID, task.MsgID))
-		_, err = s.Model(&task).WherePK().
+		_, err = s.PgDB.Model(&task).WherePK().
 			Set("status = ?", model.TaskStatusDone).
 			Update()
 		return err
@@ -73,7 +74,7 @@ func (s Scheduler) processTask(task model.Task) error {
 
 func (s Scheduler) updateMsgExpire(task model.Task) error {
 	blackList := &model.BlackList{Id: task.BlackListId}
-	err := s.Model(blackList).WherePK().First()
+	err := s.PgDB.Model(blackList).WherePK().First()
 	if err != nil {
 		return s.taskDone(&task)
 	}
@@ -89,7 +90,7 @@ func (s Scheduler) updateMsgExpire(task model.Task) error {
 }
 
 func (s Scheduler) taskDone(task *model.Task) error {
-	_, err := s.Model(task).
+	_, err := s.PgDB.Model(task).
 		WherePK().
 		Set("status = ?", model.TaskStatusDone).
 		Update()
@@ -97,7 +98,7 @@ func (s Scheduler) taskDone(task *model.Task) error {
 }
 
 func (s Scheduler) taskDelay(task *model.Task, dur time.Duration) error {
-	_, err := s.Model(task).
+	_, err := s.PgDB.Model(task).
 		WherePK().
 		Set("status = ?", model.TaskStatusPlan).
 		Set("run_at = ?", time.Now().Add(dur)).
@@ -118,8 +119,8 @@ func (s Scheduler) updateMsg(blackList *model.BlackList, timeSub time.Duration) 
 	return err
 }
 
-func AddDelMsgTask(db *pg.DB, chatID int64, msgID int) error {
-	return db.Insert(&model.Task{
+func AddDelMsgTask(db *db.DB, chatID int64, msgID int) error {
+	return db.PgDB.Insert(&model.Task{
 		Type:   model.TaskTypeDeleteMsg,
 		Status: model.TaskStatusPlan,
 		RunAt:  time.Now().Add(time.Second * 10),
@@ -128,8 +129,8 @@ func AddDelMsgTask(db *pg.DB, chatID int64, msgID int) error {
 	})
 }
 
-func AddUpdateMsgExpireTask(db *pg.DB, blackListID, chatID int64, msgID int) error {
-	return db.Insert(&model.Task{
+func AddUpdateMsgExpireTask(db *db.DB, blackListID, chatID int64, msgID int) error {
+	return db.PgDB.Insert(&model.Task{
 		Type:        model.TaskTypeUpdateMsgExpire,
 		Status:      model.TaskStatusPlan,
 		RunAt:       time.Now().Add(model.DefaultRefreshDuration),
@@ -139,8 +140,8 @@ func AddUpdateMsgExpireTask(db *pg.DB, blackListID, chatID int64, msgID int) err
 	})
 }
 
-func UpdateMsgExpireTaskDone(db *pg.DB, blackListID int64) error {
-	_, err := db.Model(&model.Task{}).
+func UpdateMsgExpireTaskDone(db *db.DB, blackListID int64) error {
+	_, err := db.PgDB.Model(&model.Task{}).
 		Where("type = ?", model.TaskTypeUpdateMsgExpire).
 		Where("black_list_id = ?", blackListID).
 		Set("status = ?", model.TaskStatusDone).
