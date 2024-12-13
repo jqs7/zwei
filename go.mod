@@ -7,7 +7,7 @@ require (
 	github.com/google/wire v0.2.1
 	github.com/hanguofeng/gocaptcha v1.0.7
 	github.com/jinzhu/inflection v0.0.0-20180308033659-04140366298a // indirect
-	github.com/kelseyhightower/envconfig v1.3.0
+	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/onsi/gomega v1.4.2 // indirect
 	github.com/skip2/go-qrcode v0.0.0-20171229120447-cf5f9fa2f0d8
 	github.com/technoweenie/multipartstreamer v1.0.1 // indirect
